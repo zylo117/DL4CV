@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import os
 
+from tools.pic_proc.fix_jpeg import gif2jpeg
+
 class SimpleDatasetLoader:
     def __init__(self, preprocessor=None):
         self.preprocessors = preprocessor
@@ -16,12 +18,21 @@ class SimpleDatasetLoader:
         labels = []
 
         # loop over the input images
-        for (i , imagePath) in enumerate(imagePaths):
+        for (i, imagePath) in enumerate(imagePaths):
             # load the image and extract the class label assuming
             # that our path has the following format:
             # /path/to/dataset/{class}/{image}.jpg
             image = cv2.imread(imagePath)
-            label = imagePaths.split(os.path.sep)[-2]
+
+            # if image is gif, opencv won't be able to read it due to the patent issue.
+            if image is None:
+                fixed = gif2jpeg(os.path.abspath(imagePath))  # convert gif(fake jpeg) to real jpeg
+                if fixed:
+                    image = cv2.imread(imagePath)
+                else:
+                    continue
+
+            label = imagePath.split(os.path.sep)[-2]
 
             if self.preprocessors is not None:
                 # loop over the preprocessors and apply each to the image

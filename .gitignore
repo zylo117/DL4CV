@@ -100,3 +100,7 @@ ENV/
 dataset/*
 *.iml
 *.xml
+*.jpg
+*.jpeg
+*.png
+*.db
