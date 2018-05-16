@@ -4,7 +4,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-from starter.knn_first_classifier.img2mem import SimplePreprocessor
+from starter.knn_first_classifier.img2mem.preprocess import SimplePreprocessor
 from starter.knn_first_classifier.img2mem.dataset_loader import SimpleDatasetLoader
 from imutils import paths
 import argparse
