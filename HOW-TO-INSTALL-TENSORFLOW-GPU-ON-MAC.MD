@@ -16,7 +16,7 @@
 ***11.INSTALL XCODE/COMMAND LINE TOOL 8.2 (TF ONLY SUPPORTS XCODE 8 and 'sudo xcode-select --switch /Library/Developer/CommandLineTools')
 12.GIT CLONE TENSORFLOW (1.5 OR UNDER)
 13.CD TENSORFLOW DIR
-14.MOD USING(
+14.MODIFY SOURCE USING(
 
     sed -i -e "s/ __align__(sizeof(T))//g" tensorflow/core/kernels/concat_lib_gpu_impl.cu.cc
     sed -i -e "s/ __align__(sizeof(T))//g" tensorflow/core/kernels/depthwise_conv_op_gpu.cu.cc
