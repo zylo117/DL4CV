@@ -1,3 +1,11 @@
+import warnings
+
+import tensorflow as tf
+import keras.backend as K
+import keras.layers as KL
+import keras.models as KM
+from keras.callbacks import ModelCheckpoint
+
 """
 Mask R-CNN
 Multi-GPU Support for Keras.
@@ -9,22 +17,16 @@ https://github.com/fchollet/keras/issues/2436
 https://medium.com/@kuza55/transparent-multi-gpu-training-on-tensorflow-with-keras-8b0016fd9012
 https://github.com/avolkov1/keras_experiments/blob/master/keras_exp/multigpu/
 https://github.com/fchollet/keras/blob/master/keras/utils/training_utils.py
+
+Subclasses the standard Keras Model and adds multi-GPU support.
+It works by creating a copy of the model on each GPU. Then it slices
+the inputs and sends a slice to each copy of the model, and then
+merges the outputs together and applies the loss on the combined
+outputs.
 """
-
-import tensorflow as tf
-import keras.backend as K
-import keras.layers as KL
-import keras.models as KM
-
-
-class ParallelModel(KM.Model):
-    """Subclasses the standard Keras Model and adds multi-GPU support.
-    It works by creating a copy of the model on each GPU. Then it slices
-    the inputs and sends a slice to each copy of the model, and then
-    merges the outputs together and applies the loss on the combined
-    outputs.
-    """
-
+# not working for custom Sequential.
+# For custom Sequential, just use "model = multi_gpu_model(single_gpu_model, gpus=HOW_MANY_GPU_YOU_NEED)"
+class ParallelStandardModel(KM.Model):
     def __init__(self, keras_model, gpu_count):
         """Class constructor.
         keras_model: The Keras model to parallelize
@@ -33,20 +35,20 @@ class ParallelModel(KM.Model):
         self.inner_model = keras_model
         self.gpu_count = gpu_count
         merged_outputs = self.make_parallel()
-        super(ParallelModel, self).__init__(inputs=self.inner_model.inputs,
-                                            outputs=merged_outputs)
+        super(ParallelStandardModel, self).__init__(inputs=self.inner_model.inputs,
+                                                    outputs=merged_outputs)
 
     def __getattribute__(self, attrname):
         """Redirect loading and saving methods to the inner model. That's where
         the weights are stored."""
         if 'load' in attrname or 'save' in attrname:
             return getattr(self.inner_model, attrname)
-        return super(ParallelModel, self).__getattribute__(attrname)
+        return super(ParallelStandardModel, self).__getattribute__(attrname)
 
     def summary(self, *args, **kwargs):
         """Override summary() to display summaries of both, the wrapper
         and inner models."""
-        super(ParallelModel, self).summary(*args, **kwargs)
+        super(ParallelStandardModel, self).summary(*args, **kwargs)
         self.inner_model.summary(*args, **kwargs)
 
     def make_parallel(self):
@@ -100,6 +102,67 @@ class ParallelModel(KM.Model):
                     m = KL.Concatenate(axis=0, name=name)(outputs)
                 merged.append(m)
         return merged
+
+
+"""
+super important if you wish to train on multi-gpus# keras has a bug that can't save multi-gpu model
+because it's scatter into N pieces(depending on count of GPUs)
+So all you need to do is saving the model which haven't been scattered.
+
+Use it almost like ModelCheckpoint
+
+For example:
+    Single-GPU:
+        checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
+                                     save_best_only=True, verbose=1)
+    Multi-GPU:
+        checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
+                                         save_best_only=True, save_weights_only=False, verbose=1)
+"""
+class ParallelModelCheckpoint(ModelCheckpoint):
+    def __init__(self, single_gpu_model, filepath, monitor='val_loss', verbose=0,
+                 save_best_only=False, save_weights_only=False,
+                 mode='auto', period=1):
+        super(ParallelModelCheckpoint, self).__init__(filepath, monitor, verbose,
+                                                      save_best_only, save_weights_only,
+                                                      mode, period)
+        # hardcore
+        self.model_to_save = single_gpu_model
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        self.epochs_since_last_save += 1
+        if self.epochs_since_last_save >= self.period:
+            self.epochs_since_last_save = 0
+            filepath = self.filepath.format(epoch=epoch + 1, **logs)
+            if self.save_best_only:
+                current = logs.get(self.monitor)
+                if current is None:
+                    warnings.warn('Can save best model only with %s available, '
+                                  'skipping.' % (self.monitor), RuntimeWarning)
+                else:
+                    if self.monitor_op(current, self.best):
+                        if self.verbose > 0:
+                            print('\nEpoch %05d: %s improved from %0.5f to %0.5f,'
+                                  ' saving model to %s'
+                                  % (epoch + 1, self.monitor, self.best,
+                                     current, filepath))
+                        self.best = current
+                        if self.save_weights_only:
+                            self.model_to_save.save_weights(filepath, overwrite=True)
+                        else:
+                            self.model_to_save.save(filepath, overwrite=True)
+                    else:
+                        if self.verbose > 0:
+                            print('\nEpoch %05d: %s did not improve from %0.5f' %
+                                  (epoch + 1, self.monitor, self.best))
+            else:
+                if self.verbose > 0:
+                    print('\nEpoch %05d: saving model to %s' % (epoch + 1, filepath))
+                if self.save_weights_only:
+                    self.model_to_save.save_weights(filepath, overwrite=True)
+                else:
+                    self.model_to_save.save(filepath, overwrite=True)
 
 
 if __name__ == "__main__":
@@ -156,7 +219,7 @@ if __name__ == "__main__":
     model = build_model(x_train, 10)
 
     # Add multi-GPU support.
-    model = ParallelModel(model, GPU_COUNT)
+    model = ParallelStandardModel(model, GPU_COUNT)
 
     optimizer = keras.optimizers.SGD(lr=0.01, momentum=0.9, clipnorm=5.0)
 

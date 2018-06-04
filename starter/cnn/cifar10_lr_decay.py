@@ -1,7 +1,7 @@
 # alpha = initAlpha * (factor ** np.floor((1 + epoch) / dropEvery))
 import matplotlib
 
-from tools.parallel_model import ParallelModel
+from tools.multi_gpu import ParallelStandardModel
 
 matplotlib.use("Agg")
 

@@ -104,3 +104,5 @@ dataset/*
 *.jpeg
 *.png
 *.db
+*.hdf5
+*.json
