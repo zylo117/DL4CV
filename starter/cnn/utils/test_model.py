@@ -64,7 +64,7 @@ for imagePath in imagePaths:
         cv2.rectangle(output, (x - 2, y - 2), (x + w + 4, y + h + 4), (0, 255, 0), 1)
         cv2.putText(output, str(pred), (x - 5, y - 5), cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, 0.55, (0, 255, 0), 2)
 
-        # show the output image
-        print("[INFO] captcha: {}".format("".join(predictions)))
-        cv2.imshow("Output", output)
-        cv2.waitKey()
+    # show the output image
+    print("[INFO] captcha: {}".format("".join(predictions)))
+    cv2.imshow("Output", output)
+    cv2.waitKey()
