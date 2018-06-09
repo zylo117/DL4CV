@@ -15,8 +15,8 @@ import os
 # config GPU
 from tools.multi_gpu import ParallelModelCheckpoint
 
-G = 2
-if G >= 1:
+G = 1
+if G > 1:
     print("[INFO] setting up for multi-gpu")
     config = tf.ConfigProto()
     config.gpu_options.per_process_gpu_memory_fraction = 0.8
