@@ -4,6 +4,8 @@ from sklearn.metrics import classification_report
 from keras.preprocessing.image import img_to_array
 from keras.optimizers import SGD
 from starter.cnn.nn.conv.lenet import LeNet
+from starter.cnn.nn.conv.shallownet import ShallowNet
+from starter.cnn.nn.conv.minivggnet import MiniVGGNet
 from starter.cnn.utils.captha_breaker.captchahelper import preprocess
 from imutils import paths
 import matplotlib.pyplot as plt
@@ -51,6 +53,8 @@ testY = lb.fit_transform(testY)
 # initialize the model
 print("[INFO] compiling model...")
 model = LeNet.build(width=28, height=28, depth=1, classes=9)
+# model = ShallowNet.build(width=28, height=28, depth=1, classes=9)
+# model = MiniVGGNet.build(width=28, height=28, depth=1, classes=9)
 opt = SGD(lr=0.01)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 
