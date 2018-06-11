@@ -6,9 +6,9 @@ path = '../dataset/flowers17'
 
 pl = os.listdir(path)
 
-flower_className = ['Daffodil', 'Snowdrop', 'Lily Valley', 'Bluebell',
+flower_className = ['Daffodil', 'Snowdrop', 'Lily_Valley', 'Bluebell',
                     'Crocus', 'Iris', 'Tigerlily', 'Tulip',
-                    'Fritillary', 'Sunflower', 'Daisy', 'Colts\'s Foot',
+                    'Fritillary', 'Sunflower', 'Daisy', 'Colts\'s_Foot',
                     'Dandelion', 'Cowslip', 'Buttercup', 'Windflower', 'Pansy']
 
 for p in pl:

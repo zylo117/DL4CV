@@ -3,15 +3,16 @@ from keras.utils import multi_gpu_model
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+from cnn.preprocessing.aspectawarepreprocessor import AspectAwarePreprocessor
 from cnn.preprocessing.imagetoarraypreprocessor import ImageToArrayPreprocessor
 from cnn.datasets.dataset_loader import SimpleDatasetLoader
-from cnn.preprocessing.aspectawarepreprocessor import AspectAwarePreprocessor
 from cnn.nn.conv.minivggnet import MiniVGGNet
+from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD
 from imutils import paths
 import matplotlib.pyplot as plt
-import numpy as np
 import tensorflow as tf
+import numpy as np
 import argparse
 import os
 
@@ -52,6 +53,15 @@ trainX, testX, trainY, testY = train_test_split(data, labels, test_size=0.25, ra
 trainY = LabelBinarizer().fit_transform(trainY)
 testY = LabelBinarizer().fit_transform(testY)
 
+# construct the image generator for data augmentation
+aug = ImageDataGenerator(rotation_range=30,
+                         width_shift_range=0.1,
+                         height_shift_range=0.1,
+                         shear_range=0.2,
+                         zoom_range=0.2,
+                         horizontal_flip=True,
+                         fill_mode='nearest')
+
 # convert the labels from integers to vectors
 print("[INFO] compiling model...")
 opt = SGD(lr=0.05)
@@ -75,8 +85,9 @@ model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy
 
 # train the network
 print("[INFO] training network...")
-H = model.fit(trainX, trainY, validation_data=(testX, testY),
-              batch_size=32, epochs=100, verbose=1)
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G),
+                        validation_data=(testX, testY),
+                        steps_per_epoch=len(trainX) // (32 * G), epochs=100, verbose=1)
 
 # evaluate the network
 print("[INFO] eveluating network...")

@@ -1,12 +1,13 @@
 import os, shutil
 
+# input here
 path = '../dataset/flowers17'
-
 prefix = 'image_'
 postfix = ''
 index_start = 0
 
 
+# start here
 def num_len(index, length):
     return str(index).zfill(length)
 
