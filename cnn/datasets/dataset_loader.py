@@ -5,8 +5,9 @@ import os
 from tools.pic_proc.fix_jpeg import gif2jpeg
 
 class SimpleDatasetLoader:
-    def __init__(self, preprocessor=None):
+    def __init__(self, preprocessor=None, gray=False):
         self.preprocessors = preprocessor
+        self.gray = gray
 
         # if the preprocessors are None, initialize them as an empty list
         if self.preprocessors is None:
@@ -22,7 +23,7 @@ class SimpleDatasetLoader:
             # load the image and extract the class label assuming
             # that our path has the following format:
             # /path/to/dataset/{class}/{image}.jpg
-            image = cv2.imread(imagePath)
+            image = cv2.imread(imagePath) if not self.gray else cv2.imread(imagePath, 0)
 
             # if image is gif, opencv won't be able to read it due to the patent issue.
             if image is None:

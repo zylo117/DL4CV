@@ -1,0 +1,56 @@
+                           precision    recall  f1-score   support
+
+                  AA Glue       0.05      0.07      0.06        28
+            Adhesive Tape       0.00      0.00      0.00        48
+                       Al       0.00      0.00      0.00        17
+                  Alumina       0.15      0.47      0.22        68
+               Black Mask       0.75      0.22      0.34        55
+                       Ca       0.00      0.00      0.00         4
+          Capacitor Scrap       0.00      0.00      0.00         2
+            Carrier Scrap       0.50      0.07      0.12        15
+                Clean Cap       0.00      0.00      0.00         3
+          Clean Shoe Sole       0.00      0.00      0.00        14
+           Electronic Fly       0.00      0.00      0.00         7
+                       Fe       0.33      0.50      0.40         4
+            Fe(GlueShape)       0.00      0.00      0.00        10
+                    Fiber       0.00      0.00      0.00        30
+                  GA Glue       0.00      0.00      0.00         5
+         Generalized Dust       0.00      0.00      0.00        10
+              Glass Fiber       1.00      0.03      0.06        33
+        Hot-Melt Adhesive       0.00      0.00      0.00         2
+              Human Sweat       0.00      0.00      0.00        13
+IRCF Incoming NG(Coating)       0.37      0.32      0.34       114
+    IRCF Incoming NG(Dig)       0.21      0.19      0.20        53
+               IRCF Scrap       0.24      0.11      0.15       109
+             IRCF Scratch       0.00      0.00      0.00        28
+               IRCF Sheet       0.00      0.00      0.00        28
+       IRCF Sheet Sticker       0.00      0.00      0.00         2
+              Lens Holder       0.00      0.00      0.00         4
+         Lens Incoming NG       0.06      0.01      0.02        81
+               Lens Scrap       0.00      0.00      0.00         8
+             Lens scratch       0.00      0.00      0.00        42
+                     Lost       0.00      0.00      0.00         2
+                       Ni       0.00      0.00      0.00         5
+                Not found       0.33      0.49      0.39        35
+                  Organic       0.00      0.00      0.00        80
+                    Other       0.00      0.00      0.00        37
+                       PE       0.00      0.00      0.00        21
+                      PET       0.00      0.00      0.00         5
+                       PP       0.20      0.02      0.03        60
+                       PS       0.00      0.00      0.00        11
+                      PVC       0.00      0.00      0.00        15
+               Power Wire       0.00      0.00      0.00        15
+                      SUS       0.00      0.00      0.00         6
+               SUS(Cr&Ni)       0.00      0.00      0.00        12
+     SUS(Cr&Ni,GlueShape)       0.00      0.00      0.00         3
+                  SUS(Cr)       0.00      0.00      0.00        10
+       Sensor Incoming NG       0.00      0.00      0.00         4
+             Sensor Scrap       0.00      0.00      0.00         2
+           Sensor Scratch       0.00      0.00      0.00         6
+                       Si       0.00      0.00      0.00         5
+                 Silicone       0.00      0.00      0.00         3
+                     Skin       0.39      0.82      0.53       546
+                   Solder       0.00      0.00      0.00         4
+                  UF Glue       0.00      0.00      0.00         3
+
+              avg / total       0.24      0.33      0.24      1727

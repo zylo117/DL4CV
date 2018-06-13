@@ -11,7 +11,7 @@ import argparse
 import os
 import imutils
 
-from starter.cnn.nn.conv.lenet import LeNet
+from cnn.nn.conv.lenet import LeNet
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset of faces")

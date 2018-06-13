@@ -3,12 +3,13 @@ import cv2
 
 
 class AspectAwarePreprocessor:
-    def __init__(self, width, height, inter=cv2.INTER_AREA):
+    def __init__(self, width, height, inter=cv2.INTER_AREA, gray=False):
         # store the target image width, height, and interpolation
         # method used when resizing
         self.width = width
         self.height = height
         self.inter = inter
+        self.gray = gray
 
     def preprocess(self, image):
         # grab the dimensions of the image and then initialize
@@ -40,4 +41,7 @@ class AspectAwarePreprocessor:
         # finally, resize the image to the provided spatial
         # dimensions to ensure our output image is always a fixed
         # size
-        return cv2.resize(image, (self.width, self.height), interpolation=self.inter)
+        image = cv2.resize(image, (self.width, self.height), interpolation=self.inter)
+        if self.gray:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        return image

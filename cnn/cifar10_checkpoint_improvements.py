@@ -3,7 +3,7 @@ import warnings
 from keras.backend import set_session
 from keras.utils import multi_gpu_model
 from sklearn.preprocessing import LabelBinarizer
-from starter.cnn.nn.conv.minivggnet import MiniVGGNet
+from cnn.nn.conv.minivggnet import MiniVGGNet
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import SGD
 from keras.datasets import cifar10

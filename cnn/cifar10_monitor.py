@@ -6,8 +6,8 @@ matplotlib.use("Agg")
 
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import classification_report
-from starter.cnn.nn.conv.minivggnet import MiniVGGNet
-from starter.cnn.callbacks.trainingmonitor import TrainMonitor
+from cnn.nn.conv.minivggnet import MiniVGGNet
+from cnn.callbacks.trainingmonitor import TrainMonitor
 from keras.callbacks import LearningRateScheduler
 from keras.optimizers import SGD
 from keras.utils import multi_gpu_model
