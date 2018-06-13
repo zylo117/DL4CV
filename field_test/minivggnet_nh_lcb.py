@@ -38,7 +38,7 @@ ap.add_argument("-b", "--best_only", type=bool, default=True,
                 help="If True, model will only write a single file with best result")
 args = vars(ap.parse_args())
 
-# grab the list of images that we’ll be describing, then extract
+# grab the list of images that we?ll be describing, then extract
 # the class label names from the image paths
 print("[INFO] loading images")
 imagePaths = []
@@ -123,13 +123,13 @@ callbacks = [checkpoint]
 
 # train the network
 print("[INFO] training network...")
-H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G), validation_data=(testX, testY),
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=2 * G), validation_data=(testX, testY),
                         callbacks=callbacks,
-                        steps_per_epoch=len(trainX) // (32 * G), class_weight=classWeight, epochs=EPOCHS, verbose=1)
+                        steps_per_epoch=len(trainX) // (2 * G), class_weight=classWeight, epochs=EPOCHS, verbose=1)
 
 # evaluate the network
 print("[INFO] eveluating network...")
-predictions = model.predict(testX, batch_size=32 * G)
+predictions = model.predict(testX, batch_size=2 * G)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))

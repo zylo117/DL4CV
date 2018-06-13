@@ -11,7 +11,7 @@ from keras import backend as K
 
 class MicroVGGNet:
     @staticmethod
-    def build(width=224, height=224, depth=3, classes=None):
+    def build(width, height, depth, classes):
         # initialize the model along with the input shape to be
         # "channels last" and the channels dimension itself
         model = Sequential()
@@ -25,65 +25,26 @@ class MicroVGGNet:
             chanDim = 1  # why 1 instead of 0? Beacause channel 0 is the data index
 
         # first CONV => RELU => CONV => RELU => POOL layer set
-        model.add(Conv2D(64, (int(width / 2), int(height / 2)), padding="same", input_shape=inputShape))
+        model.add(Conv2D(64, (3, 3), padding="same", input_shape=inputShape))
         model.add(Activation("relu"))
         model.add(BatchNormalization(axis=chanDim))
-        model.add(Conv2D(64, (int(width / 2), int(height / 2)), padding="same"))
-        model.add(Activation("relu"))
-        model.add(BatchNormalization(axis=chanDim))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
-
-        # # second CONV => RELU => CONV => RELU => POOL layer set
-        # model.add(Conv2D(256, (int(width / 2), int(height / 2)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(Conv2D(256, (int(width / 2), int(height / 2)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(MaxPooling2D(pool_size=(2, 2)))
-        # model.add(Dropout(0.25))
-
-        # first CONV => RELU => CONV => RELU => CONV => RELU => POOL layer set
-        model.add(Conv2D(128, (int(width / 4), int(height / 4)), padding="same"))
-        model.add(Activation("relu"))
-        model.add(BatchNormalization(axis=chanDim))
-        model.add(Conv2D(128, (int(width / 4), int(height / 4)), padding="same"))
-        model.add(Activation("relu"))
-        model.add(BatchNormalization(axis=chanDim))
-        model.add(Conv2D(128, (int(width / 4), int(height / 4)), padding="same"))
+        model.add(Conv2D(64, (3, 3), padding="same"))
         model.add(Activation("relu"))
         model.add(BatchNormalization(axis=chanDim))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
-        # # second CONV => RELU => CONV => RELU => CONV => RELU => POOL layer set
-        # model.add(Conv2D(512, (int(width / 8), int(height / 8)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(Conv2D(512, (int(width / 8), int(height / 8)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(Conv2D(512, (int(width / 8), int(height / 8)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(MaxPooling2D(pool_size=(2, 2)))
-        # model.add(Dropout(0.25))
+        # second CONV => RELU => CONV => RELU => POOL layer set
+        model.add(Conv2D(128, (3, 3), padding="same"))
+        model.add(Activation("relu"))
+        model.add(BatchNormalization(axis=chanDim))
+        model.add(Conv2D(128, (3, 3), padding="same"))
+        model.add(Activation("relu"))
+        model.add(BatchNormalization(axis=chanDim))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-        # third CONV => RELU => CONV => RELU => CONV => RELU => POOL layer set
-        # model.add(Conv2D(512, (int(width / 16), int(height / 16)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(Conv2D(512, (int(width / 16), int(height / 16)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(Conv2D(512, (int(width / 16), int(height / 16)), padding="same"))
-        # model.add(Activation("relu"))
-        # model.add(BatchNormalization(axis=chanDim))
-        # model.add(MaxPooling2D(pool_size=(2, 2)))
-        # model.add(Dropout(0.25))
-
-        # first(and only) set of FC => RELU layers
+        # first (and only) set of FC => RELU layers
         model.add(Flatten())
         model.add(Dense(512))
         model.add(Activation("relu"))
