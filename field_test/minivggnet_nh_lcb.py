@@ -9,6 +9,8 @@ from cnn.preprocessing.imagetoarraypreprocessor import ImageToArrayPreprocessor
 from cnn.datasets.dataset_loader import SimpleDatasetLoader
 from cnn.preprocessing.aspectawarepreprocessor import AspectAwarePreprocessor
 from cnn.nn.conv.minivggnet import MiniVGGNet
+from cnn.nn.conv.microvggnet import MicroVGGNet
+from cnn.nn.conv.vggnet import VGGNet
 from keras.optimizers import SGD
 from imutils import paths
 import matplotlib.pyplot as plt
@@ -83,7 +85,7 @@ aug = ImageDataGenerator(rotation_range=30,
 
 # convert the labels from integers to vectors
 print("[INFO] compiling model...")
-opt = SGD(lr=0.05)
+opt = SGD(lr=0.01, decay=0.01 / EPOCHS, momentum=0.9, nesterov=True)
 
 if G <= 1:
     print("[INFO] training with 1 GPU...")
@@ -95,7 +97,7 @@ else:
 
     # we'll store a copy of the model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
-    single_gpu_model = MiniVGGNet.build(width=224, height=224, depth=1, classes=len(classNames))
+    single_gpu_model = MicroVGGNet.build(width=224, height=224, depth=1, classes=len(classNames))
 
     # make the model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
@@ -121,13 +123,13 @@ callbacks = [checkpoint]
 
 # train the network
 print("[INFO] training network...")
-H = model.fit_generator(aug.flow(trainX, trainY, batch_size=64 * G), validation_data=(testX, testY),
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G), validation_data=(testX, testY),
                         callbacks=callbacks,
-                        steps_per_epoch=len(trainX) // (64 * G), class_weight=classWeight, epochs=EPOCHS, verbose=1)
+                        steps_per_epoch=len(trainX) // (32 * G), class_weight=classWeight, epochs=EPOCHS, verbose=1)
 
 # evaluate the network
 print("[INFO] eveluating network...")
-predictions = model.predict(testX, batch_size=64 * G)
+predictions = model.predict(testX, batch_size=32 * G)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
