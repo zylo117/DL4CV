@@ -1,0 +1,32 @@
+left out the lesser data(<100)
+                           precision    recall  f1-score   support
+
+                  AA Glue       0.25      0.25      0.25        76
+            Adhesive Tape       0.00      0.00      0.00        72
+                       Al       0.00      0.00      0.00        47
+                  Alumina       0.24      0.69      0.35       116
+               Black Mask       0.42      0.71      0.53        63
+            Carrier Scrap       0.00      0.00      0.00        30
+                    Fiber       0.45      0.39      0.42        76
+              Glass Fiber       0.81      0.41      0.54        32
+              Human Sweat       0.00      0.00      0.00        28
+         IRCF Incoming NG       0.28      0.30      0.29        73
+IRCF Incoming NG(Coating)       0.50      0.05      0.08        87
+    IRCF Incoming NG(Dig)       0.62      0.16      0.25        50
+               IRCF Scrap       0.77      0.13      0.23       182
+             IRCF Scratch       0.00      0.00      0.00        37
+               IRCF Sheet       0.50      0.02      0.04        54
+         Lens Incoming NG       0.50      0.05      0.09        99
+             Lens scratch       0.30      0.16      0.21        55
+                Not found       0.37      0.72      0.49        71
+                  Organic       0.11      0.27      0.16       138
+                    Other       0.08      0.10      0.09        77
+                       PE       0.00      0.00      0.00        40
+                       PP       0.50      0.03      0.06        87
+                      PVC       0.00      0.00      0.00        25
+               Power Wire       0.00      0.00      0.00        31
+     SUS(Cr&Ni,GlueShape)       0.59      0.74      0.66        27
+                     Skin       0.64      0.84      0.73       869
+                 VCM Base       0.13      0.04      0.06        72
+
+              avg / total       0.43      0.43      0.37      2614

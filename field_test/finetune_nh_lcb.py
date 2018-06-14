@@ -1,3 +1,6 @@
+from keras.backend import set_session
+from keras.callbacks import ModelCheckpoint
+from keras.utils import multi_gpu_model
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
@@ -9,16 +12,33 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import RMSprop
 from keras.optimizers import SGD
 from keras.applications import VGG16
+from keras.applications import VGG19
 from keras.layers import Input
 from keras.models import Model
 from imutils import paths
+import tensorflow as tf
 import numpy as np
 import argparse
 import os
 
+from tools.multi_gpu import ParallelModelCheckpoint
+
+EPOCHS = 100
+
+G = 2
+if G > 1:
+    print("[INFO] setting up for multi-gpu")
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    set_session(tf.Session(config=config))
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset")
 ap.add_argument("-m", "--model", required=True, help="path to output model")
+ap.add_argument("-w", "--weights", required=True, help="path to weights directory")
+ap.add_argument("-b", "--best_only", type=bool, default=True,
+                help="If True, model will only write a single file with best result")
 args = vars(ap.parse_args())
 
 # construct the image generator for data augmentation
@@ -28,24 +48,28 @@ aug = ImageDataGenerator(rotation_range=30,
                          shear_range=0.2,
                          zoom_range=0.2,
                          horizontal_flip=True,
+                         vertical_flip=True,
                          fill_mode="nearest")
 
 # grab the list of images that we’ll be describing, then extract
 # the class label names from the image paths
 print("[INFO] loading images...")
-imagePaths = list(paths.list_images(args["dataset"]))
-classNames = [pt.split(os.path.sep)[-2] for pt in imagePaths]
-classNames = [str(x) for x in np.unique(classNames)]
+imagePaths = []
+pl = os.walk(args["dataset"])
+for root, dirs, files in pl:
+    for file in files:
+        if '.jpg' in file:
+            imagePaths.append(root + "/" + file)
 
 # initialize the image preprocessors
-aap = AspectAwarePreprocessor(224, 224)
 iap = ImageToArrayPreprocessor()
 
 # load the dataset from disk then scale the raw pixel intensities to
 # the range [0, 1]
-sdl = SimpleDatasetLoader(preprocessor=[aap, iap])
+sdl = SimpleDatasetLoader(preprocessor=[iap])
 data, labels = sdl.load(imagePaths, verbose=500)
 data = data / 255
+classNames = [str(x) for x in np.unique(labels)]
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
@@ -65,11 +89,23 @@ baseModel = VGG16(weights="imagenet", include_top=False,
 
 # initialize the new head of the network, a set of FC layers
 # followed by a softmax classifier
-headModel = FCHeadNet.build(baseModel, len(classNames), 256)
+headModel = FCHeadNet.build(baseModel, len(classNames), 512)
 
 # place the head FC model on top of the base model -- this will
 # become the actual model we will train
-model = Model(inputs=baseModel.input, outputs=headModel)
+
+if G <= 1:
+    print("[INFO] training with 1 GPU...")
+    model = Model(inputs=baseModel.input, outputs=headModel)
+# otherwise, we are compiling using multiple GPUs
+else:
+    print("[INFO] training with {} GPUs...".format(G))
+
+    # we'll store a copy of the model on *every* GPU and then combine
+    # the results from the gradient updates on the CPU
+    single_gpu_model = Model(inputs=baseModel.input, outputs=headModel)
+    # make the model parallel
+    model = multi_gpu_model(single_gpu_model, gpus=G)
 
 # loop over all layers in the base model and freeze them so they
 # will *not* be updated during the training process
@@ -83,14 +119,32 @@ opt = RMSprop(lr=0.001)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
+# construct the callback to save only the *best* model to disk
+# based on the validation loss
+if not args["best_only"]:
+    fname = os.path.sep.join([args["weights"], "weights-{epoch:03d}-{val_loss:.4f}.hdf5"])
+else:
+    fname = args["weights"]
+
+if G <= 1:
+    print("[INFO] outputing model checkpoint...")
+    checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
+                                 save_best_only=True, verbose=1)
+else:
+    print("[INFO] outputing parallel model checkpoint...")
+    checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
+                                         save_best_only=True, save_weights_only=False, verbose=1)
+callbacks = [checkpoint]
+
 # train the head of the network for a few epochs (all other
 # layers are frozen) -- this will allow the new FC layers to
 # start to become initialized with actual "learned" values
 # versus pure random
 print("[INFO] training head...")
-model.fit_generator(aug.flow(trainX, trainY, batch_size=2),
-                    validation_data=(testX, testY), epochs=25,
-                    steps_per_epoch=len(trainX) // 2, verbose=1)
+model.fit_generator(aug.flow(trainX, trainY, batch_size=32),
+                    validation_data=(testX, testY), epochs=int(EPOCHS / 4),
+                    callbacks=callbacks,
+                    steps_per_epoch=len(trainX) // 32, verbose=1)
 
 # now that the head FC layers have been trained/initialized, lets
 # unfreeze the final set of CONV layers and make them trainable
@@ -107,12 +161,13 @@ model.compile(loss="categorical_crossentropy", optimizer=opt,
 # train the model again, this time fine-tuning *both* the final set
 # of CONV layers along with our set of FC layers
 print("[INFO] fine-tuning model...")
-model.fit_generator(aug.flow(trainX, trainY, batch_size=2), validation_data=(testX, testY),
-                    epochs=100, steps_per_epoch=len(trainX) // 2, verbose=1)
+model.fit_generator(aug.flow(trainX, trainY, batch_size=32), validation_data=(testX, testY),
+                    callbacks=callbacks,
+                    epochs=EPOCHS, steps_per_epoch=len(trainX) // 32, verbose=1)
 
 # evaluate the network on the fine-tuned model
 print("[INFO] evaluating after fine-tuning...")
-predictions = model.predict(testX, batch_size=2)
+predictions = model.predict(testX, batch_size=32)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
