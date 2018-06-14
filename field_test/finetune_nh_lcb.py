@@ -72,16 +72,19 @@ data, labels = sdl.load(imagePaths, verbose=500)
 data = data / 255
 classNames = [str(x) for x in np.unique(labels)]
 
+# convert the labels from integers to vectors
+labels = LabelBinarizer().fit_transform(labels)
+
+# account for skew in the labeled data
+classTotals = labels.sum(axis=0)
+classWeight = classTotals.max() / classTotals
+
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
 trainX, testX, trainY, testY = train_test_split(data, labels,
                                                 test_size=0.25,
                                                 stratify=labels,
                                                 random_state=42)
-
-# convert the labels from integers to vectors
-trainY = LabelBinarizer().fit_transform(trainY)
-testY = LabelBinarizer().fit_transform(testY)
 
 # load the VGG16 network, ensuring the head FC layer sets are left
 # off
@@ -142,10 +145,11 @@ callbacks = [checkpoint]
 # start to become initialized with actual "learned" values
 # versus pure random
 print("[INFO] training head...")
-model.fit_generator(aug.flow(trainX, trainY, batch_size=32),
+model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G),
                     validation_data=(testX, testY), epochs=int(EPOCHS / 4),
                     callbacks=callbacks,
-                    steps_per_epoch=len(trainX) // 32, verbose=1)
+                    class_weight=classWeight,
+                    steps_per_epoch=len(trainX) // 32 * G, verbose=1)
 
 # now that the head FC layers have been trained/initialized, lets
 # unfreeze the final set of CONV layers and make them trainable
@@ -162,13 +166,14 @@ model.compile(loss="categorical_crossentropy", optimizer=opt,
 # train the model again, this time fine-tuning *both* the final set
 # of CONV layers along with our set of FC layers
 print("[INFO] fine-tuning model...")
-H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32), validation_data=(testX, testY),
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G), validation_data=(testX, testY),
                     callbacks=callbacks,
-                    epochs=EPOCHS, steps_per_epoch=len(trainX) // 32, verbose=1)
+                    class_weight=classWeight,
+                    epochs=EPOCHS, steps_per_epoch=len(trainX) // 32 * G, verbose=1)
 
 # evaluate the network on the fine-tuned model
 print("[INFO] evaluating after fine-tuning...")
-predictions = model.predict(testX, batch_size=32)
+predictions = model.predict(testX, batch_size=32 * G)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
