@@ -145,11 +145,11 @@ callbacks = [checkpoint]
 # start to become initialized with actual "learned" values
 # versus pure random
 print("[INFO] training head...")
-model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G),
+model.fit_generator(aug.flow(trainX, trainY, batch_size=32),
                     validation_data=(testX, testY), epochs=int(EPOCHS / 4),
                     callbacks=callbacks,
                     class_weight=classWeight,
-                    steps_per_epoch=len(trainX) // 32 * G, verbose=1)
+                    steps_per_epoch=len(trainX) // 32, verbose=1)
 
 # now that the head FC layers have been trained/initialized, lets
 # unfreeze the final set of CONV layers and make them trainable
@@ -166,14 +166,14 @@ model.compile(loss="categorical_crossentropy", optimizer=opt,
 # train the model again, this time fine-tuning *both* the final set
 # of CONV layers along with our set of FC layers
 print("[INFO] fine-tuning model...")
-H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G), validation_data=(testX, testY),
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32), validation_data=(testX, testY),
                     callbacks=callbacks,
                     class_weight=classWeight,
-                    epochs=EPOCHS, steps_per_epoch=len(trainX) // 32 * G, verbose=1)
+                    epochs=EPOCHS, steps_per_epoch=len(trainX) // 32, verbose=1)
 
 # evaluate the network on the fine-tuned model
 print("[INFO] evaluating after fine-tuning...")
-predictions = model.predict(testX, batch_size=32 * G)
+predictions = model.predict(testX, batch_size=32)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
