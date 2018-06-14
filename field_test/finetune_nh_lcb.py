@@ -16,6 +16,7 @@ from keras.applications import VGG19
 from keras.layers import Input
 from keras.models import Model
 from imutils import paths
+import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import argparse
@@ -161,7 +162,7 @@ model.compile(loss="categorical_crossentropy", optimizer=opt,
 # train the model again, this time fine-tuning *both* the final set
 # of CONV layers along with our set of FC layers
 print("[INFO] fine-tuning model...")
-model.fit_generator(aug.flow(trainX, trainY, batch_size=32), validation_data=(testX, testY),
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32), validation_data=(testX, testY),
                     callbacks=callbacks,
                     epochs=EPOCHS, steps_per_epoch=len(trainX) // 32, verbose=1)
 
@@ -178,3 +179,16 @@ if G <= 1:
     model.save(args["model"])
 else:
     single_gpu_model.save(args["model"])
+
+# plot the training loss and accuracy
+plt.style.use("ggplot")
+plt.figure()
+plt.plot(np.arange(EPOCHS), H.history["loss"], label="train_loss")
+plt.plot(np.arange(EPOCHS), H.history["val_loss"], label="val_loss")
+plt.plot(np.arange(EPOCHS), H.history["acc"], label="train_acc")
+plt.plot(np.arange(EPOCHS), H.history["val_acc"], label="val_acc")
+plt.title("Training Loss and Accuracy")
+plt.xlabel("Epoch #")
+plt.ylabel("Loss/Accuracy")
+plt.legend()
+plt.show()
