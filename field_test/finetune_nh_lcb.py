@@ -174,4 +174,7 @@ print(classification_report(testY.argmax(axis=1),
 
 # save the model to disk
 print("[INFO] serializing model...")
-model.save(args["model"])
+if G <= 1:
+    model.save(args["model"])
+else:
+    single_gpu_model.save(args["model"])
