@@ -5,17 +5,14 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from cnn.preprocessing.imagetoarraypreprocessor import ImageToArrayPreprocessor
-from cnn.preprocessing.aspectawarepreprocessor import AspectAwarePreprocessor
 from cnn.datasets.dataset_loader import SimpleDatasetLoader
 from cnn.nn.conv.fcheadnet import FCHeadNet
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import RMSprop
 from keras.optimizers import SGD
 from keras.applications import VGG16
-from keras.applications import VGG19
 from keras.layers import Input
 from keras.models import Model
-from imutils import paths
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
@@ -23,8 +20,9 @@ import argparse
 import os
 
 from tools.multi_gpu import ParallelModelCheckpoint
+from tools.paths import list_images
 
-EPOCHS = 100
+EPOCHS = 150
 
 G = 2
 if G > 1:
@@ -55,12 +53,7 @@ aug = ImageDataGenerator(rotation_range=30,
 # grab the list of images that we’ll be describing, then extract
 # the class label names from the image paths
 print("[INFO] loading images...")
-imagePaths = []
-pl = os.walk(args["dataset"])
-for root, dirs, files in pl:
-    for file in files:
-        if '.jpg' in file:
-            imagePaths.append(root + "/" + file)
+imagePaths = list_images(args["dataset"])
 
 # initialize the image preprocessors
 iap = ImageToArrayPreprocessor()

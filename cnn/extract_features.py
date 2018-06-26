@@ -3,7 +3,7 @@ from keras.applications import imagenet_utils
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing.image import load_img
 from sklearn.preprocessing import LabelEncoder
-from cnn.io.hdf5datasetwriter import HDF5DatasetWriter
+from cnn.io_.hdf5datasetwriter import HDF5DatasetWriter
 from imutils import paths
 import numpy as np
 import argparse
