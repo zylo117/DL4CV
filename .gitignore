@@ -106,3 +106,5 @@ dataset/*
 *.db
 *.hdf5
 *.json
+*.pickle
+*.cpickle
