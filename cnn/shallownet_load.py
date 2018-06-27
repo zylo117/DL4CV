@@ -1,5 +1,5 @@
 from cnn.preprocessing.imagetoarraypreprocessor import ImageToArrayPreprocessor
-from cnn.preprocessing.preprocess import SimplePreprocessor
+from cnn.preprocessing.simplepreprocessor import SimplePreprocessor
 from cnn.datasets.dataset_loader import SimpleDatasetLoader
 from keras.models import load_model
 from imutils import paths

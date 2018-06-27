@@ -16,7 +16,7 @@ import numpy as np
 import argparse
 import os
 
-G = 2
+G = 1
 if G > 1:
     print("[INFO] setting up for multi-gpu")
     config = tf.ConfigProto()
@@ -85,13 +85,13 @@ model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy
 
 # train the network
 print("[INFO] training network...")
-H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32 * G),
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=1 * G),
                         validation_data=(testX, testY),
-                        steps_per_epoch=len(trainX) // (32 * G), epochs=100, verbose=1)
+                        steps_per_epoch=len(trainX) // (1 * G), epochs=100, verbose=1)
 
 # evaluate the network
 print("[INFO] eveluating network...")
-predictions = model.predict(testX, batch_size=32)
+predictions = model.predict(testX, batch_size=1)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
