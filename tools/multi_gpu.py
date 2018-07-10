@@ -127,6 +127,8 @@ class ParallelModelCheckpoint(ModelCheckpoint):
                                                       save_best_only, save_weights_only,
                                                       mode, period)
         # hardcore
+        # hardcore
+        # hardcore
         self.model_to_save = single_gpu_model
 
     def on_epoch_end(self, epoch, logs=None):
