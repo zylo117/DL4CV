@@ -1,0 +1,21 @@
+                           precision    recall  f1-score   support
+
+                  AA Glue       0.64      0.37      0.47        76
+                  Alumina       0.74      0.53      0.62       116
+               Black Mask       0.63      0.67      0.65        63
+                    Fiber       0.79      0.43      0.56        76
+              Glass Fiber       0.93      0.78      0.85        32
+         IRCF Incoming NG       0.46      0.34      0.39        73
+IRCF Incoming NG(Coating)       0.53      0.38      0.44        87
+    IRCF Incoming NG(Dig)       0.65      0.61      0.63        49
+               IRCF Scrap       0.71      0.58      0.64       182
+         Lens Incoming NG       0.31      0.46      0.37        99
+             Lens scratch       0.58      0.46      0.52        54
+                Not found       0.87      0.87      0.87        71
+                  Organic       0.33      0.12      0.17       138
+                       PP       0.48      0.38      0.42        87
+     SUS(Cr&Ni,GlueShape)       0.79      0.85      0.82        27
+                     Skin       0.75      0.96      0.84       869
+                 VCM Base       0.51      0.57      0.54        72
+
+              avg / total       0.66      0.67      0.65      2171

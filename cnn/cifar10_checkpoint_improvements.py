@@ -67,11 +67,11 @@ else:
     fname = args["weights"]
 
 if G <= 1:
-    print("[INFO] outputing model checkpoint...")
+    print("[INFO] outputing model checkpoints...")
     checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
                                  save_best_only=True, verbose=1)
 else:
-    print("[INFO] outputing parallel model checkpoint...")
+    print("[INFO] outputing parallel model checkpoints...")
     checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
                                          save_best_only=True, save_weights_only=False, verbose=1)
 callbacks = [checkpoint]

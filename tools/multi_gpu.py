@@ -113,10 +113,10 @@ Use it almost like ModelCheckpoint
 
 For example:
     Single-GPU:
-        checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
+        checkpoints = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
                                      save_best_only=True, verbose=1)
     Multi-GPU:
-        checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
+        checkpoints = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
                                          save_best_only=True, save_weights_only=False, verbose=1)
 """
 class ParallelModelCheckpoint(ModelCheckpoint):

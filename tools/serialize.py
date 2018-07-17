@@ -1,8 +1,8 @@
 import os, shutil
 
 # input here
-path = '../dataset/flowers17'
-prefix = 'image_'
+path = '../datasets/vin/'
+prefix = 'vin_'
 postfix = ''
 index_start = 0
 
