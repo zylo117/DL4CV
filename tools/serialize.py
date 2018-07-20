@@ -1,8 +1,8 @@
 import os, shutil
 
 # input here
-path = '../datasets/vin/'
-prefix = 'vin_'
+path = '../datasets/tripod/'
+prefix = 'tripod_'
 postfix = ''
 index_start = 0
 

@@ -25,7 +25,7 @@ VAL_HDF5 = '../../datasets/tiny-imagenet-200/hdf5/val.hdf5'
 TEST_HDF5 = '../../datasets/tiny-imagenet-200/hdf5/test.hdf5'
 
 # define the path to the dataset mean
-DATESET_MEAN = 'output/tiny-image-net-200-mean.json'
+DATASET_MEAN = 'output/tiny-image-net-200-mean.json'
 
 # define the path to the output directory used for storing plots,
 # classification reports, etc.

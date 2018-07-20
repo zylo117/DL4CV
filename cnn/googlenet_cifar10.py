@@ -27,7 +27,7 @@ if G > 1:
     # config = tf.ConfigProto()
     # config.gpu_options.per_process_gpu_memory_fraction = 0.8
     # set_session(tf.Session(config=config))
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 
 def poly_decay(epoch):
@@ -50,6 +50,15 @@ ap.add_argument('-m', '--model', required=True,
 ap.add_argument('-o', '--output', required=True,
                 help='path to output directory (logs, plots, etc.)')
 args = vars(ap.parse_args())
+
+
+aug = ImageDataGenerator(rotation_range=20,
+                         zoom_range=0.15,
+                         width_shift_range=0.2,
+                         height_shift_range=0.2,
+                         shear_range=0.15,
+                         horizontal_flip=True,
+                         fill_mode='nearest')
 
 # load the training and testing data, converting the images from
 # integers to floats
@@ -103,9 +112,9 @@ model.compile(loss='categorical_crossentropy', optimizer=opt,
 
 # train the network
 print('[INFO] training network...')
-model.fit_generator(aug.flow(trainX, trainY, batch_size=1024 * G),
+model.fit_generator(aug.flow(trainX, trainY, batch_size=128 * G),
                     validation_data=(testX, testY),
-                    steps_per_epoch=len(trainX) // (1024 * G),
+                    steps_per_epoch=len(trainX) // (128 * G),
                     epochs=NUM_EPOCHS, callbacks=callback, verbose=1)
 
 # save the network to disk

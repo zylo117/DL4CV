@@ -108,3 +108,4 @@ dataset/*
 *.json
 *.pickle
 *.cpickle
+*.rar
