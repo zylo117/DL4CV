@@ -1,5 +1,5 @@
 201807202335
-[INFO] best hyperparameters: {'C': 0.0001}
+[INFO] best hyperparameters: {'C': 1e-4}
 [INFO] evaluating...
                 precision    recall  f1-score   support
 
@@ -22,18 +22,6 @@ without_tripod       0.70      0.68      0.69        79
 
 [INFO] score: 0.6712328767123288
 
-201807202346
-[INFO] best hyperparameters: {'C': 1e-09}
-[INFO] evaluating...
-                precision    recall  f1-score   support
-
-   with_tripod       0.59      0.75      0.66        67
-without_tripod       0.72      0.56      0.63        79
-
-   avg / total       0.66      0.64      0.64       146
-
-[INFO] score: 0.6438356164383562
-
 201807202354
 [INFO] best hyperparameters: {'C': 1e-08}
 [INFO] evaluating...
@@ -45,3 +33,171 @@ without_tripod       0.73      0.67      0.70        79
    avg / total       0.69      0.68      0.69       146
 
 [INFO] score: 0.684931506849315
+
+201807210008
+[INFO] best hyperparameters: {'C': 9e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.64      0.70      0.67        67
+without_tripod       0.73      0.67      0.70        79
+
+   avg / total       0.69      0.68      0.69       146
+
+[INFO] score: 0.684931506849315
+
+201807210007
+[INFO] best hyperparameters: {'C': 8e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.64      0.70      0.67        67
+without_tripod       0.73      0.67      0.70        79
+
+   avg / total       0.69      0.68      0.69       146
+
+[INFO] score: 0.684931506849315
+
+201807210011
+[INFO] best hyperparameters: {'C': 7.5e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.64      0.70      0.67        67
+without_tripod       0.73      0.67      0.70        79
+
+   avg / total       0.69      0.68      0.69       146
+
+[INFO] score: 0.684931506849315
+
+201807210005
+[INFO] best hyperparameters: {'C': 7e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.65      0.73      0.69        67
+without_tripod       0.75      0.67      0.71        79
+
+   avg / total       0.70      0.70      0.70       146
+
+[INFO] score: 0.6986301369863014
+
+201807210017
+[INFO] best hyperparameters: {'C': 6.75e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.65      0.73      0.69        67
+without_tripod       0.75      0.67      0.71        79
+
+   avg / total       0.70      0.70      0.70       146
+
+[INFO] score: 0.6986301369863014
+
+201807210010
+[INFO] best hyperparameters: {'C': 6.5e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.65      0.73      0.69        67
+without_tripod       0.75      0.67      0.71        79
+
+   avg / total       0.70      0.70      0.70       146
+
+[INFO] score: 0.6986301369863014
+
+201807210019
+[INFO] best hyperparameters: {'C': 6.5e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.62      0.76      0.68        49
+without_tripod       0.79      0.66      0.72        68
+
+   avg / total       0.72      0.70      0.70       117
+
+[INFO] score: 0.7008547008547008
+
+201807210016
+[INFO] best hyperparameters: {'C': 6.3e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.65      0.73      0.69        67
+without_tripod       0.75      0.67      0.71        79
+
+   avg / total       0.70      0.70      0.70       146
+
+[INFO] score: 0.6986301369863014
+
+201807210009
+[INFO] best hyperparameters: {'C': 6e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.65      0.73      0.69        67
+without_tripod       0.75      0.67      0.71        79
+
+   avg / total       0.70      0.70      0.70       146
+
+[INFO] score: 0.6986301369863014
+
+201807210012
+[INFO] best hyperparameters: {'C': 5.5e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.64      0.73      0.69        67
+without_tripod       0.74      0.66      0.70        79
+
+   avg / total       0.70      0.69      0.69       146
+
+[INFO] score: 0.6917808219178082
+
+201807210002
+[INFO] best hyperparameters: {'C': 5e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.64      0.73      0.69        67
+without_tripod       0.74      0.66      0.70        79
+
+   avg / total       0.70      0.69      0.69       146
+
+[INFO] score: 0.6917808219178082
+
+201807210004
+[INFO] best hyperparameters: {'C': 4e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.63      0.73      0.68        67
+without_tripod       0.74      0.63      0.68        79
+
+   avg / total       0.69      0.68      0.68       146
+
+[INFO] score: 0.678082191780822
+
+201807210003
+[INFO] best hyperparameters: {'C': 3e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.63      0.72      0.67        67
+without_tripod       0.73      0.65      0.68        79
+
+   avg / total       0.68      0.68      0.68       146
+
+[INFO] score: 0.678082191780822
+
+201807202346
+[INFO] best hyperparameters: {'C': 1e-09}
+[INFO] evaluating...
+                precision    recall  f1-score   support
+
+   with_tripod       0.59      0.75      0.66        67
+without_tripod       0.72      0.56      0.63        79
+
+   avg / total       0.66      0.64      0.64       146
+
+[INFO] score: 0.6438356164383562
