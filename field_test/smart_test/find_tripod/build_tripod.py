@@ -12,7 +12,7 @@ import os
 
 # grab the paths to the training images, then extract the training
 # class labels and encode them
-trainPaths = paths.list_images(config.RAW_IMAGE_PATH)
+trainPaths = paths.list_images(config.IMAGE_PATH)
 trainLabels = [p.split('/')[-2] for p in trainPaths]
 le = LabelEncoder()
 trainLabels = le.fit_transform(trainLabels)
@@ -43,8 +43,6 @@ datasets = [
 # initialize the lists of RGB channel averages
 (R,G,B) = ([],[],[])
 
-aap = AspectAwarePreprocessor(1024, 1024, inter=cv2.INTER_LANCZOS4, gray=False)
-
 # loop over the dataset tuples
 for (dType, paths, labels, outputPath) in datasets:
     # create HDF5 writer
@@ -61,8 +59,6 @@ for (dType, paths, labels, outputPath) in datasets:
     for (i, (path, label)) in enumerate(zip(paths, labels)):
         # load the image from disk
         image = cv2.imread(path)
-
-        image = aap.preprocess(image)
 
         # if we are building the training dataset, then compute the
         # mean of each channel in the image, then update the

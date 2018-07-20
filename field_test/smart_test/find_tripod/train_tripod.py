@@ -10,7 +10,7 @@ import field_test.smart_test.find_tripod.config.tripod_config as config
 from cnn.io_.hdf5datasetgenrator import HDF5DatasetGenerator
 from cnn.nn.conv.alexnet import AlexNet
 from cnn.preprocessing.imagetoarraypreprocessor import ImageToArrayPreprocessor
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,8 +23,8 @@ from cnn.preprocessing.preprocess import SimplePreprocessor
 from tools.multi_gpu import ParallelModelCheckpoint
 
 EPOCHS = 100
-LEARNINGRATE = 1e-3
-BATCHSIZE = 32
+INIT_LR = 1e-4
+BATCHSIZE = 64
 
 G = 2
 if G > 1:
@@ -68,7 +68,21 @@ valGen = HDF5DatasetGenerator(config.VAL_HDF5, BATCHSIZE * 2,
 
 # initialize the optimizer
 print('[INFO] compiling model...')
-opt = Adam(lr=LEARNINGRATE)
+def poly_decay(epoch):
+    # initialize the maximum number of epochs, base learning rate,
+    # and power of the polynomial
+    maxEpochs = EPOCHS
+    baseLR = INIT_LR
+    power = 1.0
+
+    # compute the new learning rate based on polynomial decay
+    alpha = baseLR * (1 - (epoch / float(maxEpochs))) ** power
+
+    # return the new learning rate
+    return alpha
+
+opt = SGD(lr=INIT_LR, momentum=0.9, nesterov=True)
+
 single_gpu_model = AlexNet.build(width=227, height=227, depth=3,
                                  classes=2, reg=0.0002)
 
@@ -107,9 +121,9 @@ callbacks = [checkpoint]
 # train the network
 H = model.fit_generator(
     generator=trainGen.generator(),
-    steps_per_epoch=trainGen.numImages // (BATCHSIZE * 2),
+    steps_per_epoch=trainGen.numImages // BATCHSIZE,
     validation_data=valGen.generator(),
-    validation_steps=valGen.numImages // (BATCHSIZE * 2),
+    validation_steps=valGen.numImages // BATCHSIZE,
     epochs=EPOCHS,
     max_queue_size=BATCHSIZE * G,
     callbacks=callbacks, verbose=1
