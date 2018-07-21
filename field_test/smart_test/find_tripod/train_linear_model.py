@@ -24,7 +24,7 @@ i = int(db['labels'].shape[0] * 0.75)
 # define the set of parameters that we want to tune then start a
 # grid search where we evaluate our model for each value of C
 print('[INFO] tuning hyperparameters...')
-params = {'C': [6.5e-9]}
+params = {'C': [1e-9,1e-8,1e-7,1e-6,1e-5,1e-4]}
 model = GridSearchCV(LogisticRegression(), params, cv=3,
                      n_jobs=args['jobs'])
 model.fit(db['feature'][:i], db['labels'][:i])

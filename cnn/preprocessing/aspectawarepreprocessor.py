@@ -15,6 +15,10 @@ class AspectAwarePreprocessor:
         # grab the dimensions of the image and then initialize
         # the deltas to use when cropping
         h, w = image.shape[:2]
+
+        if h == self.height and w == self.width:
+            return image
+
         dW = 0
         dH = 0
         # if the width is smaller than the height, then resize

@@ -1,9 +1,14 @@
+import cv2
 from keras.applications import InceptionResNetV2
 from keras.applications.inception_resnet_v2 import imagenet_utils
-from keras.preprocessing.image import img_to_array
+from keras.preprocessing.image import img_to_array, ImageDataGenerator
 from keras.preprocessing.image import load_img
 from sklearn.preprocessing import LabelEncoder
 from cnn.io_.hdf5datasetwriter import HDF5DatasetWriter
+from cnn.preprocessing.aspectawarepreprocessor import AspectAwarePreprocessor
+from cnn.preprocessing.croppreprocessor import CropPreprocessor
+from cnn.preprocessing.patchpreprocessor import PatchProcessor
+from cnn.preprocessing.preprocess import SimplePreprocessor
 from tools import paths
 import numpy as np
 import progressbar
@@ -57,6 +62,17 @@ widgets = ['Extracting Features: ', progressbar.Percentage(), ' ',
 pbar = progressbar.ProgressBar(maxval=len(imagePaths),
                                widgets=widgets).start()
 
+# image augmentation
+aap = AspectAwarePreprocessor(299, 299, inter=cv2.INTER_LANCZOS4)
+# pp = PatchProcessor(299, 299)
+aug = ImageDataGenerator(rotation_range=20,
+                         zoom_range=0.15,
+                         width_shift_range=0.2,
+                         height_shift_range=0.2,
+                         shear_range=0.15,
+                         horizontal_flip=True,
+                         fill_mode='nearest')
+
 # loop over the images in batches
 for i in np.arange(0, len(imagePaths), bs):
     # extract the batch of images and labels, then initialize the
@@ -70,8 +86,18 @@ for i in np.arange(0, len(imagePaths), bs):
     for (j, imagePath) in enumerate(batchPaths):
         # load the input image using the Keras helper utility
         # while ensuring the image is resized to 224x224 pixels
-        image = load_img(imagePath, target_size=(299, 299), interpolation='lanczos')
-        image = img_to_array(image)
+
+        # from PIL to numpy
+        # image = load_img(imagePath, target_size=(299, 299), interpolation='lanczos')
+        # image = img_to_array(image)
+
+        # directly from numpy
+        image = cv2.imread(imagePath)
+        # crop to suitable size (a little larger than the target size)
+        image = aap.preprocess(image)
+        # randomly choose a patch(target size) as target image
+        # image = pp.preprocess(image)
+        image = image.astype(np.float64)
 
         # preprocess the image by (1) expanding the dimensions and
         # (2) subtracting the mean RGB pixel intensity from the
@@ -86,6 +112,9 @@ for i in np.arange(0, len(imagePaths), bs):
     # our actual features
     batchImages = np.vstack(batchImages)
     features = model.predict(batchImages, batch_size=bs)
+    # features = model.predict_generator(aug.flow(batchImages, batchLabels, save_to_dir='./output/aug/',
+    #                                             save_format='jpeg', save_prefix='aug'), steps=1,
+    #                                    max_queue_size=bs)
 
     # reshape the features so that each image is represented by
     # a flattened feature vector of the ‘MaxPooling2D‘ outputs
