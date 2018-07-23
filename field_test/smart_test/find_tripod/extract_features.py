@@ -7,7 +7,7 @@ from sklearn.preprocessing import LabelEncoder
 from cnn.io_.hdf5datasetwriter import HDF5DatasetWriter
 from cnn.preprocessing.aspectawarepreprocessor import AspectAwarePreprocessor
 from cnn.preprocessing.croppreprocessor import CropPreprocessor
-from cnn.preprocessing.patchpreprocessor import PatchProcessor
+from cnn.preprocessing.patchpreprocessor import PatchPreprocessor
 from cnn.preprocessing.preprocess import SimplePreprocessor
 from tools import paths
 import numpy as np
@@ -112,7 +112,7 @@ for i in np.arange(0, len(imagePaths), bs):
     # our actual features
     batchImages = np.vstack(batchImages)
     features = model.predict(batchImages, batch_size=bs)
-    # features = model.predict_generator(aug.flow(batchImages, batchLabels, save_to_dir='./output/aug/',
+    # features = lpr_model.predict_generator(aug.flow(batchImages, batchLabels, save_to_dir='./output/aug/',
     #                                             save_format='jpeg', save_prefix='aug'), steps=1,
     #                                    max_queue_size=bs)
 

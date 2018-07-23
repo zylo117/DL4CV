@@ -6,7 +6,7 @@ from keras.layers.core import Dense
 class FCHeadNet:
     @staticmethod
     def build(baseModel, classes, D):
-        # initialize the head model that will be placed on top of
+        # initialize the head lpr_model that will be placed on top of
         # the base, then add a FC layer
         headModel = baseModel.output
         headModel = Flatten(name="flatten")(headModel)
@@ -16,7 +16,7 @@ class FCHeadNet:
         # add a softmax layer
         headModel = Dense(classes, activation="softmax")(headModel)
 
-        # return the model
+        # return the lpr_model
         return headModel
 
 

@@ -12,13 +12,13 @@ from keras import backend as K
 class VGGNet:
     @staticmethod
     def build(width=224, height=224, depth=3, classes=None):
-        # initialize the model along with the input shape to be
+        # initialize the lpr_model along with the input shape to be
         # "channels last" and the channels dimension itself
         model = Sequential()
         inputShape = (height, width, depth)
         chanDim = -1
 
-        # initialize the model along with the input shape to be
+        # initialize the lpr_model along with the input shape to be
         # "channels last" and the channels dimension itself
         if K.image_data_format() == "channels_first":
             inputShape = (depth, height, width)

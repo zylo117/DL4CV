@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.image import extract_patches_2d
 
-class PatchProcessor:
+class PatchPreprocessor:
     def __init__(self, width, height):
         # store the target width and height of the image
         self.width = width

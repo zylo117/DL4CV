@@ -34,10 +34,10 @@ if G > 1:
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset")
-ap.add_argument("-m", "--model", required=True, help="path to output model")
+ap.add_argument("-m", "--lpr_model", required=True, help="path to output lpr_model")
 ap.add_argument("-w", "--weights", required=True, help="path to weights directory")
 ap.add_argument("-b", "--best_only", type=bool, default=True,
-                help="If True, model will only write a single file with best result")
+                help="If True, lpr_model will only write a single file with best result")
 args = vars(ap.parse_args())
 
 # construct the image generator for data augmentation
@@ -88,8 +88,8 @@ baseModel = VGG16(weights="imagenet", include_top=False,
 # followed by a softmax classifier
 headModel = FCHeadNet.build(baseModel, len(classNames), 512)
 
-# place the head FC model on top of the base model -- this will
-# become the actual model we will train
+# place the head FC lpr_model on top of the base lpr_model -- this will
+# become the actual lpr_model we will train
 
 if G <= 1:
     print("[INFO] training with 1 GPU...")
@@ -98,25 +98,25 @@ if G <= 1:
 else:
     print("[INFO] training with {} GPUs...".format(G))
 
-    # we'll store a copy of the model on *every* GPU and then combine
+    # we'll store a copy of the lpr_model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
     single_gpu_model = Model(inputs=baseModel.input, outputs=headModel)
-    # make the model parallel
+    # make the lpr_model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
 
-# loop over all layers in the base model and freeze them so they
+# loop over all layers in the base lpr_model and freeze them so they
 # will *not* be updated during the training process
 for layer in baseModel.layers:
     layer.trainable = False
 
-# compile our model (this needs to be done after our setting our
+# compile our lpr_model (this needs to be done after our setting our
 # layers to being non-trainable
-print("[INFO] compiling model...")
+print("[INFO] compiling lpr_model...")
 opt = RMSprop(lr=0.001)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
-# construct the callback to save only the *best* model to disk
+# construct the callback to save only the *best* lpr_model to disk
 # based on the validation loss
 if not args["best_only"]:
     fname = os.path.sep.join([args["weights"], "weights-{epoch:03d}-{val_loss:.4f}.hdf5"])
@@ -124,11 +124,11 @@ else:
     fname = args["weights"]
 
 if G <= 1:
-    print("[INFO] outputing model checkpoints...")
+    print("[INFO] outputing lpr_model checkpoints...")
     checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
                                  save_best_only=True, verbose=1)
 else:
-    print("[INFO] outputing parallel model checkpoints...")
+    print("[INFO] outputing parallel lpr_model checkpoints...")
     checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
                                          save_best_only=True, save_weights_only=False, verbose=1)
 callbacks = [checkpoint]
@@ -149,34 +149,34 @@ model.fit_generator(aug.flow(trainX, trainY, batch_size=32),
 for layer in baseModel.layers[15:]:
     layer.trainable = True
 
-# for the changes to the model to take affect we need to recompile
-# the model, this time using SGD with a *very* small learning rate
-print("[INFO] re-compiling model...")
+# for the changes to the lpr_model to take affect we need to recompile
+# the lpr_model, this time using SGD with a *very* small learning rate
+print("[INFO] re-compiling lpr_model...")
 opt = SGD(lr=0.001)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
-# train the model again, this time fine-tuning *both* the final set
+# train the lpr_model again, this time fine-tuning *both* the final set
 # of CONV layers along with our set of FC layers
-print("[INFO] fine-tuning model...")
+print("[INFO] fine-tuning lpr_model...")
 H = model.fit_generator(aug.flow(trainX, trainY, batch_size=32), validation_data=(testX, testY),
                     callbacks=callbacks,
                     class_weight=classWeight,
                     epochs=EPOCHS, steps_per_epoch=len(trainX) // 32, verbose=1)
 
-# evaluate the network on the fine-tuned model
+# evaluate the network on the fine-tuned lpr_model
 print("[INFO] evaluating after fine-tuning...")
 predictions = model.predict(testX, batch_size=32)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
 
-# save the model to disk
-print("[INFO] serializing model...")
+# save the lpr_model to disk
+print("[INFO] serializing lpr_model...")
 if G <= 1:
-    model.save(args["model"])
+    model.save(args["lpr_model"])
 else:
-    single_gpu_model.save(args["model"])
+    single_gpu_model.save(args["lpr_model"])
 
 # plot the training loss and accuracy
 plt.style.use("ggplot")

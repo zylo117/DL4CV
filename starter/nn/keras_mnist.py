@@ -35,7 +35,7 @@ model.add(Dense(256, input_shape=(784,), activation="sigmoid"))
 model.add(Dense(128, activation="sigmoid"))
 model.add(Dense(10, activation="softmax"))
 
-# train the model using SGD
+# train the lpr_model using SGD
 print("[INFO] training network...")
 sgd = SGD(0.01)
 model.compile(loss="categorical_crossentropy", optimizer=sgd, metrics=["accuracy"])

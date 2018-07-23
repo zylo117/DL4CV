@@ -7,7 +7,7 @@ from cnn.nn.conv.alexnet import AlexNet
 from field_test.dogs_vs_cats.config import dogs_vs_cats_config as config
 from cnn.preprocessing.imagetoarraypreprocessor import ImageToArrayPreprocessor
 from cnn.preprocessing.simplepreprocessor import SimplePreprocessor
-from cnn.preprocessing.patchpreprocessor import PatchProcessor
+from cnn.preprocessing.patchpreprocessor import PatchPreprocessor
 from cnn.preprocessing.meanpreprocessor import MeanPreprocessor
 from cnn.callbacks.trainingmonitor import TrainMonitor
 from cnn.io_.hdf5datasetgenrator import HDF5DatasetGenerator
@@ -40,7 +40,7 @@ means = json.loads(open(config.DATASET_MEAN).read())
 
 # initialize the image preprocessors
 sp = SimplePreprocessor(227, 227)
-pp = PatchProcessor(227, 227)
+pp = PatchPreprocessor(227, 227)
 mp = MeanPreprocessor(means['R'], means['G'], means['B'])
 iap = ImageToArrayPreprocessor()
 
@@ -51,7 +51,7 @@ valGen = HDF5DatasetGenerator(config.VAL_HDF5, 128,
                               preprocessors=[sp, mp, iap], classes=2)
 
 # initialize the optimizer
-print('[INFO] compiling model...')
+print('[INFO] compiling lpr_model...')
 opt = Adam(lr=1e-3)
 single_gpu_model = AlexNet.build(width=227, height=227, depth=3,
                                  classes=2, reg=0.0002)
@@ -63,9 +63,9 @@ if G <= 1:
 else:
     print("[INFO] training with {} GPUs...".format(G))
 
-    # we'll store a copy of the model on *every* GPU and then combine
+    # we'll store a copy of the lpr_model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
-    # make the model parallel
+    # make the lpr_model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
 
 model.compile(loss='binary_crossentropy', optimizer=opt,
@@ -86,8 +86,8 @@ model.fit_generator(
     callbacks=callbacks, verbose=1
 )
 
-# save the model to file
-print('[INFO] serializing model...')
+# save the lpr_model to file
+print('[INFO] serializing lpr_model...')
 single_gpu_model.save(config.MODEL_PATH, overwrite=True)
 
 # close the HDF5 datasets

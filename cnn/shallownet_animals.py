@@ -50,8 +50,8 @@ if __classes__ == 2:
     new_testY[:, 1] = new_testY[:, 0] == False
     testY = new_testY
 
-# initialize the optimizer and model
-print("[INFO] compiling model...")
+# initialize the optimizer and lpr_model
+print("[INFO] compiling lpr_model...")
 opt = SGD(lr=0.005)
 model = ShallowNet.build(width=32, height=32, depth=3, classes=__classes__)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])

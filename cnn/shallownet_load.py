@@ -11,7 +11,7 @@ __classes__ = 2
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset")
-ap.add_argument("-m", "--model", required=True, help="path to pre-trained dataset")
+ap.add_argument("-m", "--lpr_model", required=True, help="path to pre-trained dataset")
 args = vars(ap.parse_args())
 
 # initialize the class labels
@@ -36,7 +36,7 @@ data = data.astype(np.float) / 255
 
 # load the pre-trained network
 print("[INFO] loading pre-trained network...")
-model = load_model(args["model"])
+model = load_model(args["lpr_model"])
 
 # make predictions on the images
 print("[INFO] prediction...")

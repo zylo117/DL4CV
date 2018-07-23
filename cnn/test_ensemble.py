@@ -24,14 +24,14 @@ testY = lb.fit_transform(testY)
 
 # construct the path used to collect the models then initialize the
 # models list
-modelPaths = os.path.sep.join([args["models"], "*.model"])
+modelPaths = os.path.sep.join([args["models"], "*.lpr_model"])
 modelPaths = list(glob.glob(modelPaths))
 models = []
 
-# loop over the model paths, loading the model, and adding it to
+# loop over the lpr_model paths, loading the lpr_model, and adding it to
 # the list of models
 for (i, modelPath) in enumerate(modelPaths):
-    print("[INFO] loading model {}/{}".format(i + 1, len(modelPaths)))
+    print("[INFO] loading lpr_model {}/{}".format(i + 1, len(modelPaths)))
     models.append(load_model(modelPath))
 
 # initialize the list of predictions
@@ -40,11 +40,11 @@ predictions = []
 
 # loop over the models
 for model in models:
-    # use the current model to make predictions on the testing data,
+    # use the current lpr_model to make predictions on the testing data,
     # then store these predictions in the aggregate predictions list
     predictions.append(model.predict(testX, batch_size=64))
 
-# average the probabilities across all model predictions, then show
+# average the probabilities across all lpr_model predictions, then show
 # a classification report
 predictions = np.average(predictions, axis=0)
 print(classification_report(testY.argmax(axis=1),

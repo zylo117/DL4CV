@@ -25,7 +25,7 @@ if G > 1:
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--weights", required=True, help="path to weights directory")
-ap.add_argument("-b", "--best_only", type=bool, default=True, help="If True, model will only write a single file with best result")
+ap.add_argument("-b", "--best_only", type=bool, default=True, help="If True, lpr_model will only write a single file with best result")
 args = vars(ap.parse_args())
 
 # load the training and testing data, then scale it into the range [0, 1]
@@ -39,8 +39,8 @@ lb = LabelBinarizer()
 trainY = lb.fit_transform(trainY)
 testY = lb.fit_transform(testY)
 
-# initialize the optimizer and model
-print("[INFO] compiling model...")
+# initialize the optimizer and lpr_model
+print("[INFO] compiling lpr_model...")
 opt = SGD(lr=0.01, decay=0.01 / 40, momentum=0.9, nesterov=True)
 if G <= 1:
     print("[INFO] training with 1 GPU...")
@@ -50,16 +50,16 @@ if G <= 1:
 else:
     print("[INFO] training with {} GPUs...".format(G))
 
-    # we'll store a copy of the model on *every* GPU and then combine
+    # we'll store a copy of the lpr_model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
     single_gpu_model = MiniVGGNet.build(width=32, height=32, depth=3, classes=10)
 
-    # make the model parallel
+    # make the lpr_model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
 
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 
-# construct the callback to save only the *best* model to disk
+# construct the callback to save only the *best* lpr_model to disk
 # based on the validation loss
 if not args["best_only"]:
     fname = os.path.sep.join([args["weights"], "weights-{epoch:03d}-{val_loss:.4f}.hdf5"])
@@ -67,13 +67,13 @@ else:
     fname = args["weights"]
 
 if G <= 1:
-    print("[INFO] outputing model checkpoints...")
+    print("[INFO] outputing lpr_model checkpoints...")
     checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
-                                 save_best_only=True, verbose=1)
+                                 save_best_only=args["best_only"], verbose=1)
 else:
-    print("[INFO] outputing parallel model checkpoints...")
+    print("[INFO] outputing parallel lpr_model checkpoints...")
     checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
-                                         save_best_only=True, save_weights_only=False, verbose=1)
+                                         save_best_only=args["best_only"], save_weights_only=False, verbose=1)
 callbacks = [checkpoint]
 
 # train the network

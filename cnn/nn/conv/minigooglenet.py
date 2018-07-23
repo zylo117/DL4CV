@@ -62,7 +62,7 @@ class MiniGoogLeNet:
             inputShape = (depth, height, width)
             chanDim = 1
 
-        # define the model input and first CONV module
+        # define the lpr_model input and first CONV module
         inputs = Input(shape=inputShape)
         x = MiniGoogLeNet.conv_module(inputs, 96, 3, 3,
                                       (1, 1), chanDim)
@@ -89,7 +89,7 @@ class MiniGoogLeNet:
         x = Dense(classes)(x)
         x = Activation('softmax')(x)
 
-        # create the model
+        # create the lpr_model
         model = Model(inputs, x, name='googlenet')
 
         # return the constructed network architecture

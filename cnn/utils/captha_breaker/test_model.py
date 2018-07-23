@@ -11,13 +11,13 @@ import cv2
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
                 help="path to input directory of images")
-ap.add_argument("-m", "--model", required=True,
-                help="path to input model")
+ap.add_argument("-m", "--lpr_model", required=True,
+                help="path to input lpr_model")
 args = vars(ap.parse_args())
 
 # load the pre-trained network
 print("[INFO] loading pre-trained network...")
-model = load_model(args["model"])
+model = load_model(args["lpr_model"])
 
 # randomly sample a few of the input images
 imagePaths = list(paths.list_images(args["image"]))

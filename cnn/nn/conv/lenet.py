@@ -10,7 +10,7 @@ from keras import backend as K
 class LeNet:
     @staticmethod
     def build(width, height, depth, classes):
-        # initialize the model
+        # initialize the lpr_model
         model = Sequential()
         inputShape = (height, width, depth)
 

@@ -34,7 +34,7 @@ trainX, testX, trainY, testY = train_test_split(data, labels, test_size=0.25, ra
 for r in (None, "l1", "l2"):
     # train a SGD classifier using a softmax loss function and the
     # specified regularization function for 10 epochs
-    print("[INFO] training model with %s penalty" % r)
+    print("[INFO] training lpr_model with %s penalty" % r)
     model = SGDClassifier(loss="log", penalty=r, max_iter=100, learning_rate="constant", eta0=0.01, random_state=42)
     model.fit(trainX, trainY)
 

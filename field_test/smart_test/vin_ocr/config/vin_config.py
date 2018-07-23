@@ -15,10 +15,10 @@ TRAIN_HDF5 = '../../datasets/kaggle_dogs_vs_cats/hdf5/train.hdf5'
 VAL_HDF5 = '../../datasets/kaggle_dogs_vs_cats/hdf5/val.hdf5'
 TEST_HDF5 = '../../datasets/kaggle_dogs_vs_cats/hdf5/test.hdf5'
 
-# path to the output model file
-MODEL_PATH = 'output/alexnet_dogs_vs_cats.model'
+# path to the output lpr_model file
+MODEL_PATH = 'output/alexnet_dogs_vs_cats.lpr_model'
 
-# path to the output model file
+# path to the output lpr_model file
 DATASET_MEAN = 'output/dogs_vs_cats_mean.json'
 
 # define the path to the output directory used for storing plots,
