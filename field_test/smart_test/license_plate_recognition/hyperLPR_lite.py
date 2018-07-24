@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from keras import backend as K
+from field_test.smart_test.license_plate_recognition.deskew import deskew
 from keras.models import *
 from keras.layers import *
 
@@ -52,21 +53,24 @@ class LPR():
         image_color_cropped = image[padding:resize_h - padding, 0:image_gray.shape[1]]
         image_gray = cv2.cvtColor(image_color_cropped, cv2.COLOR_RGB2GRAY)
         watches = self.watch_cascade.detectMultiScale(image_gray, en_scale, 1,  # tolerate how many neighbours
-                                                      minSize=(25, 10),
-                                                      maxSize=(25 * 40, 10 * 40))
+                                                      minSize=(36, 9),
+                                                      maxSize=(36 * 40, 9 * 40))
         cropped_images = []
         # safe zone
         for (x, y, w, h) in watches:
-            x -= w * 0.14
-            w += w * 0.28
-            y -= h * 0.3
-            h += h * 0.9
+            x -= w * 0.28
+            w += w * 0.56
+            y -= h * 0.6
+            h += h * 1.5
 
             cropped = self.cropImage(image_color_cropped, (int(x), int(y), int(w), int(h)))
+            cropped = deskew(cropped)
+
             cropped_images.append([cropped, [x, y + padding, w, h]])
 
-            # cv2.imshow('peep', cropped)
-            # cv2.waitKey(0)
+            cv2.imshow('peep', cropped)
+            # cv2.imwrite('test/1.jpg', cropped)
+            cv2.waitKey(0)
 
         return cropped_images
 

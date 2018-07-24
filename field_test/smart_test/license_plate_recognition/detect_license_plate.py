@@ -83,7 +83,7 @@ def speed_benchmark(img_path, lpr_model):
 
 
 if __name__ == '__main__':
-    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/1111.jpg"
+    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0111.jpg"
     lpr_model = load_lpr_model("model/cascade.xml", "model/model12.h5", "model/ocr_plate_all_gru.h5")
 
     # 加入机制，识别率低于0.90就自动旋转图片5°重新测试，√
