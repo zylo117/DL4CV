@@ -45,22 +45,29 @@ class LPR():
         if top_bottom_padding_rate > 0.2:
             print(("error:top_bottom_padding_rate > 0.2:", top_bottom_padding_rate))
             exit(1)
-        height = image_gray.shape[0]
-        padding = int(height * top_bottom_padding_rate)
         scale = image_gray.shape[1] / float(image_gray.shape[0])
-        image = cv2.resize(image_gray, (int(scale * resize_h), resize_h))
+        image = cv2.resize(image_gray, (int(scale * resize_h), resize_h), interpolation=cv2.INTER_LANCZOS4)
+        height = image.shape[0]
+        padding = int(height * top_bottom_padding_rate)
         image_color_cropped = image[padding:resize_h - padding, 0:image_gray.shape[1]]
         image_gray = cv2.cvtColor(image_color_cropped, cv2.COLOR_RGB2GRAY)
-        watches = self.watch_cascade.detectMultiScale(image_gray, en_scale, 2, minSize=(36, 9),
-                                                      maxSize=(36 * 40, 9 * 40))
+        watches = self.watch_cascade.detectMultiScale(image_gray, en_scale, 1,  # tolerate how many neighbours
+                                                      minSize=(25, 10),
+                                                      maxSize=(25 * 40, 10 * 40))
         cropped_images = []
+        # safe zone
         for (x, y, w, h) in watches:
             x -= w * 0.14
             w += w * 0.28
-            y -= h * 0.15
-            h += h * 0.3
+            y -= h * 0.3
+            h += h * 0.9
+
             cropped = self.cropImage(image_color_cropped, (int(x), int(y), int(w), int(h)))
             cropped_images.append([cropped, [x, y + padding, w, h]])
+
+            # cv2.imshow('peep', cropped)
+            # cv2.waitKey(0)
+
         return cropped_images
 
     def fastdecode(self, y_pred):
@@ -121,7 +128,7 @@ class LPR():
         return model
 
     def finemappingVertical(self, image, rect):
-        resized = cv2.resize(image, (66, 16))
+        resized = cv2.resize(image, (66, 16), interpolation=cv2.INTER_LANCZOS4)
         resized = resized.astype(np.float) / 255
         res_raw = self.modelFineMapping.predict(np.array([resized]))[0]
         res = res_raw * image.shape[1]
@@ -136,12 +143,13 @@ class LPR():
         rect[2] -= rect[2] * (1 - res_raw[1] + res_raw[0])
         rect[0] += res[0]
         image = image[:, H:T + 2]
-        image = cv2.resize(image, (int(136), int(36)))
+        image = cv2.resize(image, (int(136), int(36)), interpolation=cv2.INTER_LANCZOS4)
+
         return image, rect
 
     def recognizeOne(self, src):
         x_tempx = src
-        x_temp = cv2.resize(x_tempx, (164, 48))
+        x_temp = cv2.resize(x_tempx, (164, 48), interpolation=cv2.INTER_LANCZOS4)
         x_temp = x_temp.transpose(1, 0, 2)
         y_pred = self.modelSeqRec.predict(np.array([x_temp]))
         y_pred = y_pred[:, 2:, :]

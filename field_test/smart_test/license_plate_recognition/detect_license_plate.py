@@ -1,6 +1,9 @@
 import time
 
+import imutils
+
 from field_test.smart_test.license_plate_recognition.hyperLPR_lite import LPR
+from tools.perspective import four_point_transform
 import cv2
 import numpy as np
 from PIL import ImageFont
@@ -41,15 +44,22 @@ def drawRectBox(image, rect, addText):
     return imagex
 
 
-def detect_single_img(img_path, lpr_model, imshow=False):
-    img_origin = cv2.imread(img_path)
+def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=False):
+    """
 
+    :param img_origin: Numpy/Opencv image
+    :param lpr_model:
+    :param imshow:
+    :return:
+    """
     # contains pr text, its confidence and its bounding box rect
     result = lpr_model.SimpleRecognizePlateByE2E(img_origin)
 
+    img = img_origin.copy()
+
     for pstr, confidence, rect in result:
-        if confidence > 0.3:
-            img = drawRectBox(img_origin, rect, pstr + " " + str(round(confidence, 3)))
+        if confidence > confidence_thresh:
+            img = drawRectBox(img, rect, pstr + " " + str(round(confidence, 3)))
             print("plate_str:")
             print(pstr)
             print("plate_confidence")
@@ -73,9 +83,83 @@ def speed_benchmark(img_path, lpr_model):
 
 
 if __name__ == '__main__':
-    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0321.jpg"
+    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/1111.jpg"
     lpr_model = load_lpr_model("model/cascade.xml", "model/model12.h5", "model/ocr_plate_all_gru.h5")
 
-    result = detect_single_img(img_path, lpr_model, imshow=True)
+    # 加入机制，识别率低于0.90就自动旋转图片5°重新测试，√
+    # SSD检测汽车，再检测车牌，避免干扰
+    # SSD检测车牌
+    # 检测汽车朝向，对车牌纠正
+    # CV纠正车牌变形
 
-    speed_benchmark(img_path, lpr_model)
+    img_origin = cv2.imread(img_path)
+    rotate_anti_clockwise = True
+    rotate_count = 0
+    img_next = img_origin
+    retry_angle = 5
+    confidence_thresh = 0.75
+    while True:
+        result, img = detect_single_img(img_next, lpr_model, confidence_thresh=confidence_thresh, imshow=False)
+
+        print(result)
+
+        confidence_set = []
+        for r in result:
+            confidence_set.append(r[1])
+
+        if len(confidence_set) >= 1:
+            confidence_max = np.max(np.array(confidence_set))
+        else:
+            confidence_max = 0
+
+        if confidence_max < confidence_thresh:
+            if rotate_anti_clockwise:
+                img_next = imutils.rotate(img_origin, retry_angle * (rotate_count + 1))
+                h, w = img_next.shape[:2]
+                ori = [[0, 0], [w, 0],
+                       [w, h], [0, h]]
+                ori = np.array(ori).astype(np.float32)
+                dst = [[np.tan(np.deg2rad(retry_angle * 2)) * w, 0], [w, np.tan(np.deg2rad(retry_angle * 2)) * h],
+                       [w, h], [0, h]]
+                dst = np.array(dst).astype(np.float32)
+
+                # compute the perspective transform matrix and then apply it
+                M = cv2.getPerspectiveTransform(ori, dst)
+                img_next = cv2.warpPerspective(img_next, M, (img_next.shape[1], img_next.shape[0]))
+
+                # cv2.imshow('car', imutils.resize(img_next, width=1024))
+            else:
+                img_next = imutils.rotate(img_origin, -retry_angle * (rotate_count + 1))
+                h, w = img_next.shape[:2]
+                ori = [[0, 0], [w, 0],
+                       [w, h], [0, h]]
+                ori = np.array(ori).astype(np.float32)
+                dst = [[0, np.tan(np.deg2rad(retry_angle * 2)) * h], [w * (1 - np.tan(np.deg2rad(retry_angle * 2))), 0],
+                       [w, h], [0, h]]
+                dst = np.array(dst).astype(np.float32)
+
+                # compute the perspective transform matrix and then apply it
+                M = cv2.getPerspectiveTransform(ori, dst)
+                img_next = cv2.warpPerspective(img_next, M, (img_next.shape[1], img_next.shape[0]))
+
+                # cv2.imshow('car', imutils.resize(img_next, width=1024))
+
+            rotate_anti_clockwise = not rotate_anti_clockwise
+            rotate_count += 1
+
+            if rotate_count > 12:
+                print('rotation fix failed')
+                break
+            else:
+                print('retrying at {}'.format(rotate_count))
+        else:
+            angle_compensated = retry_angle * np.round(rotate_count / 2)
+            if rotate_count % 2 == 0:
+                angle_compensated *= -1
+            print('retry counts: {}, angle compensated: {}°'.format(rotate_count, angle_compensated))
+            img = imutils.resize(img, width=1024, inter=cv2.INTER_LANCZOS4)
+            cv2.imshow('test', img)
+            cv2.waitKey(0)
+            break
+
+    # speed_benchmark(img_path, lpr_model)
