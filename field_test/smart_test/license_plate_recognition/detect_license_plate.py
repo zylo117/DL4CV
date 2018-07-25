@@ -44,7 +44,7 @@ def drawRectBox(image, rect, addText):
     return imagex
 
 
-def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=False):
+def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=False, fine_mapping=True, use_tesseract=False):
     """
 
     :param img_origin: Numpy/Opencv image
@@ -53,7 +53,7 @@ def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=Fals
     :return:
     """
     # contains pr text, its confidence and its bounding box rect
-    result = lpr_model.SimpleRecognizePlateByE2E(img_origin)
+    result = lpr_model.SimpleRecognizePlateByE2E(img_origin, fine_mapping=fine_mapping, use_tesseract=use_tesseract)
 
     img = img_origin.copy()
 
@@ -83,7 +83,7 @@ def speed_benchmark(img_path, lpr_model):
 
 
 if __name__ == '__main__':
-    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0111.jpg"
+    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0321.jpg"
     lpr_model = load_lpr_model("model/cascade.xml", "model/model12.h5", "model/ocr_plate_all_gru.h5")
 
     # 加入机制，识别率低于0.90就自动旋转图片5°重新测试，√
@@ -97,9 +97,11 @@ if __name__ == '__main__':
     rotate_count = 0
     img_next = img_origin
     retry_angle = 5
-    confidence_thresh = 0.75
+    confidence_thresh = 0.9
     while True:
-        result, img = detect_single_img(img_next, lpr_model, confidence_thresh=confidence_thresh, imshow=False)
+        result, img = detect_single_img(img_next, lpr_model, confidence_thresh=confidence_thresh,
+                                        imshow=False,
+                                        fine_mapping=True, use_tesseract=True)
 
         print(result)
 

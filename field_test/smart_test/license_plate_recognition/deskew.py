@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from field_test.smart_test.license_plate_recognition.kmeans import kMeans
+
 
 def deskew(ori_img):
     # preprocess
@@ -64,11 +66,26 @@ def detrap(ori_img):
 
     if lines is not None:
         lines1 = lines[:, 0, :]  # extract to 2d
+        k_set = []
         for x1, y1, x2, y2 in lines1[:]:
+            k = slope(x1, x2, y1, y2)
+            k_set.append(k)
+
             cv2.line(ori_img, (x1, y1), (x2, y2),
                      (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), 5)
+            # cv2.circle(ori_img, (x1, y1), 5, (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), -1)
+            # cv2.circle(ori_img, (x2, y2), 5, (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), -1)
 
     print('line count: {}'.format(len(lines)))
+
+    try:
+        k_set.remove(np.inf)
+    except ValueError:
+        pass
+
+    k_set = np.asarray(k_set)
+    k_set = k_set.reshape((len(k_set), 1))
+    center, cluster = kMeans(k_set, 2)
 
     cv2.imshow('img', img)
     cv2.waitKey(0)
@@ -76,8 +93,15 @@ def detrap(ori_img):
     cv2.waitKey(0)
 
 
+def slope(x1, x2, y1, y2):
+    if x1 != x2:
+        return (y2 - y1) / (x2 - x1)
+    else:
+        return np.inf
+
+
 if __name__ == '__main__':
-    ori_img = cv2.imread('test/1.jpg')
+    ori_img = cv2.imread('test/2.jpg')
 
     # warp = deskew(ori_img)
     trap = detrap(ori_img)

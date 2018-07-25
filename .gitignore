@@ -109,3 +109,4 @@ dataset/*
 *.pickle
 *.cpickle
 *.rar
+*.txt

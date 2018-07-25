@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from keras import backend as K
 from field_test.smart_test.license_plate_recognition.deskew import deskew
-import pytesseract.pytesseract as tesseract
 from keras.models import *
 from keras.layers import *
 
@@ -61,8 +60,8 @@ class LPR():
         for (x, y, w, h) in watches:
             x -= w * 0.28
             w += w * 0.56
-            y -= h * 0.6
-            h += h * 1.5
+            y -= h * 0.3
+            h += h * 0.6
 
             cropped = self.cropImage(image_color_cropped, (int(x), int(y), int(w), int(h)))
             # cropped = deskew(cropped)
@@ -163,19 +162,12 @@ class LPR():
         y_pred = y_pred[:, 2:, :]
         return self.fastdecode(y_pred)
 
-    def SimpleRecognizePlateByE2E(self, image, fine_mapping=True, use_tesseract=False):
+    def SimpleRecognizePlateByE2E(self, image):
         images = self.detectPlateRough(image, image.shape[0], top_bottom_padding_rate=0.1)
         res_set = []
-        for j, image in enumerate(images):
-            (plate, rect) = image
-            if fine_mapping:
-                plate, rect = self.finemappingVertical(plate, rect)
-
-            if use_tesseract:
-                data = tesseract.image_to_string(plate, 'chi_sim')
-                print(data)
-
-            res, confidence = self.recognizeOne(plate)
-            res_set.append([res, confidence, rect])
-
+        for j, plate in enumerate(images):
+            plate, rect = plate
+            image_rgb, rect_refine = self.finemappingVertical(plate, rect)
+            res, confidence = self.recognizeOne(image_rgb)
+            res_set.append([res, confidence, rect_refine])
         return res_set
