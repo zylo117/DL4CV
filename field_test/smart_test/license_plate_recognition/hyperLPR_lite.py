@@ -1,7 +1,9 @@
 import cv2
+import imutils
 import numpy as np
+import tensorflow as tf
 from keras import backend as K
-from field_test.smart_test.license_plate_recognition.deskew import deskew
+from field_test.smart_test.license_plate_recognition.deskew import deskew, detrap
 import pytesseract.pytesseract as tesseract
 from keras.models import *
 from keras.layers import *
@@ -12,8 +14,7 @@ chars = ["京", "沪", "津", "渝", "冀", "晋", "蒙", "辽", "吉", "黑", "
          "Y", "Z", "港", "学", "使", "警", "澳", "挂", "军", "北", "南", "广", "沈", "兰", "成", "济", "海", "民", "航", "空"
          ]
 
-
-class LPR():
+class LPR:
     def __init__(self, model_detection, model_finemapping, model_seq_rec):
         self.watch_cascade = cv2.CascadeClassifier(model_detection)
         self.modelFineMapping = self.model_finemapping()
@@ -43,7 +44,8 @@ class LPR():
         x, y, w, h = self.computeSafeRegion(image.shape, rect)
         return image[y:y + h, x:x + w]
 
-    def detectPlateRough(self, image_gray, resize_h=720, en_scale=1.08, top_bottom_padding_rate=0.05):
+    def detectPlateRough(self, image_gray, resize_h=720, en_scale=1.08, top_bottom_padding_rate=0.05,
+                         use_CV_fix=False):
         if top_bottom_padding_rate > 0.2:
             print(("error:top_bottom_padding_rate > 0.2:", top_bottom_padding_rate))
             exit(1)
@@ -59,19 +61,73 @@ class LPR():
         cropped_images = []
         # safe zone
         for (x, y, w, h) in watches:
-            x -= w * 0.28
-            w += w * 0.56
-            y -= h * 0.6
-            h += h * 1.5
+            if not use_CV_fix:
+                x -= w * 0.14
+                w += w * 0.28
+                y -= h * 0.15
+                h += h * 0.3
+            else:
+                x -= w * 0.28
+                w += w * 0.56
+                y -= h * 1.2
+                h += h * 3.6
 
             cropped = self.cropImage(image_color_cropped, (int(x), int(y), int(w), int(h)))
-            # cropped = deskew(cropped)
+
+            if use_CV_fix:
+                # add perspective fix
+
+                # CTPN, useless, abandoned
+                # cropped = bound_text(cropped, tf_session=self.tf_session)
+
+                # CV fix
+                img_bk = cropped
+                img_alt_gray = cv2.cvtColor(img_bk, cv2.COLOR_BGR2GRAY)
+                val, img_alt_gray = cv2.threshold(img_alt_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+                cv2.imshow('img1', cropped)
+                cv2.waitKey(0)
+                rotation, M, cropped_debug = detrap(cropped)
+                if rotation is not None and M is not None:
+                    cropped = imutils.rotate_bound(cropped, angle=-rotation)
+                    cropped = cv2.warpPerspective(cropped, M, (cropped.shape[1], cropped.shape[0]))
+
+                    # postprocess / extract car plate
+                    cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+                    img = cv2.medianBlur(cropped, 3)
+
+                    # remove background
+                    val, img = cv2.threshold(img, val, 255, cv2.THRESH_BINARY)
+                    img = cv2.GaussianBlur(img, (11, 11), 0)
+
+                    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
+                    img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel, iterations=32, borderType=cv2.BORDER_REFLECT101)
+                    img = cv2.dilate(img, None, iterations=2)
+                    _, img = cv2.threshold(img, 1, 255, cv2.THRESH_BINARY)
+
+                    cropped = cv2.bitwise_and(cropped, img)
+
+                    # crop to car plate
+                    coords = np.column_stack(np.where(cropped > 0))  # get all non-zero pixel coords
+                    anchor, size, angle = cv2.minAreaRect(coords)  # bound them with a rotated rect
+                    cropped = cropped[int(anchor[0] - size[0] / 2):int(anchor[0] + size[0] / 2),
+                           int(anchor[1] - size[1] / 2):int(anchor[1] + size[1] / 2)]
+
+                    cropped = cv2.resize(cropped, (320, 110), interpolation=cv2.INTER_LANCZOS4)
+
+                    # enhance one more time
+                    # cropped = cv2.equalizeHist(cropped)
+
+                    # stack image in dimension channel to fit the network
+                    cropped = np.dstack([cropped, cropped, cropped])
+
+                    cv2.imshow('img2', cropped)
+                    cv2.waitKey(0)
 
             cropped_images.append([cropped, [x, y + padding, w, h]])
 
-            cv2.imshow('peep', cropped)
-            cv2.imwrite('test/3.jpg', cropped)
-            cv2.waitKey(0)
+            # cv2.imshow('peep', cropped)
+            # cv2.waitKey(0)
 
         return cropped_images
 
@@ -133,27 +189,28 @@ class LPR():
         return model
 
     def finemappingVertical(self, image, rect):
+        ori_image = image
         resized = cv2.resize(image, (66, 16), interpolation=cv2.INTER_LANCZOS4)
         resized = resized.astype(np.float) / 255
         res_raw = self.modelFineMapping.predict(np.array([resized]))[0]
-        res = res_raw * image.shape[1]
+        res = res_raw * ori_image.shape[1]
         res = res.astype(np.int)
         H, T = res
         H -= 3
         if H < 0:
             H = 0
         T += 2
-        if T >= image.shape[1] - 1:
-            T = image.shape[1] - 1
+        if T >= ori_image.shape[1] - 1:
+            T = ori_image.shape[1] - 1
         rect[2] -= rect[2] * (1 - res_raw[1] + res_raw[0])
         rect[0] += res[0]
-        image = image[:, H:T + 2]
-        image = cv2.resize(image, (int(136), int(36)), interpolation=cv2.INTER_LANCZOS4)
+        ori_image = ori_image[:, H:T + 2]
+        # image = cv2.resize(image, (int(164), int(48)), interpolation=cv2.INTER_LANCZOS4)
 
-        cv2.imshow('peep2', image)
+        cv2.imshow('peep2', ori_image)
         cv2.waitKey(0)
 
-        return image, rect
+        return ori_image, rect
 
     def recognizeOne(self, src):
         x_tempx = src
@@ -163,17 +220,14 @@ class LPR():
         y_pred = y_pred[:, 2:, :]
         return self.fastdecode(y_pred)
 
-    def SimpleRecognizePlateByE2E(self, image, fine_mapping=True, use_tesseract=False):
-        images = self.detectPlateRough(image, image.shape[0], top_bottom_padding_rate=0.1)
+    def SimpleRecognizePlateByE2E(self, image, fine_mapping=True, use_CV_fix=False):
+        images = self.detectPlateRough(image, image.shape[0], top_bottom_padding_rate=0.1,
+                                       use_CV_fix=use_CV_fix)
         res_set = []
         for j, image in enumerate(images):
             (plate, rect) = image
-            if fine_mapping:
+            if fine_mapping and not use_CV_fix:
                 plate, rect = self.finemappingVertical(plate, rect)
-
-            if use_tesseract:
-                data = tesseract.image_to_string(plate, 'chi_sim')
-                print(data)
 
             res, confidence = self.recognizeOne(plate)
             res_set.append([res, confidence, rect])

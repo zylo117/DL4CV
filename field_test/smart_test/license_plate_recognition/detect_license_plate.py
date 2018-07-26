@@ -1,14 +1,15 @@
 import time
 
 import imutils
-
-from field_test.smart_test.license_plate_recognition.hyperLPR_lite import LPR
-from tools.perspective import four_point_transform
+from keras.backend import set_session
+import tensorflow as tf
 import cv2
 import numpy as np
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
+
+from field_test.smart_test.license_plate_recognition.hyperLPR_lite import LPR
 
 
 def load_lpr_model(pr_rough_detect_classifier, pr_fine_detect_model, pr_text_ocr_model):
@@ -44,7 +45,8 @@ def drawRectBox(image, rect, addText):
     return imagex
 
 
-def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=False, fine_mapping=True, use_tesseract=False):
+def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=False, fine_mapping=True,
+                      use_CV_fix=False):
     """
 
     :param img_origin: Numpy/Opencv image
@@ -53,7 +55,7 @@ def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=Fals
     :return:
     """
     # contains pr text, its confidence and its bounding box rect
-    result = lpr_model.SimpleRecognizePlateByE2E(img_origin, fine_mapping=fine_mapping, use_tesseract=use_tesseract)
+    result = lpr_model.SimpleRecognizePlateByE2E(img_origin, fine_mapping=fine_mapping, use_CV_fix=use_CV_fix)
 
     img = img_origin.copy()
 
@@ -83,25 +85,34 @@ def speed_benchmark(img_path, lpr_model):
 
 
 if __name__ == '__main__':
-    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0321.jpg"
+    # init set gpu mem usage
+    # init session
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    tf_session = tf.Session(config=config)
+
+    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0111.jpg"
     lpr_model = load_lpr_model("model/cascade.xml", "model/model12.h5", "model/ocr_plate_all_gru.h5")
 
     # 加入机制，识别率低于0.90就自动旋转图片5°重新测试，√
+    # 再尼玛识别不出来，就CTPN识别文本位置，从而透视纠正，√
+    # CV纠正车牌变形
     # SSD检测汽车，再检测车牌，避免干扰
     # SSD检测车牌
     # 检测汽车朝向，对车牌纠正
-    # CV纠正车牌变形
 
     img_origin = cv2.imread(img_path)
     rotate_anti_clockwise = True
-    rotate_count = 0
+    retry_count = 0
     img_next = img_origin
     retry_angle = 5
-    confidence_thresh = 0.9
+    confidence_thresh = 0.90
+    CV_fix = False
+
     while True:
         result, img = detect_single_img(img_next, lpr_model, confidence_thresh=confidence_thresh,
                                         imshow=False,
-                                        fine_mapping=True, use_tesseract=True)
+                                        fine_mapping=True, use_CV_fix=CV_fix)
 
         print(result)
 
@@ -115,8 +126,8 @@ if __name__ == '__main__':
             confidence_max = 0
 
         if confidence_max < confidence_thresh:
-            if rotate_anti_clockwise:
-                img_next = imutils.rotate(img_origin, retry_angle * (rotate_count + 1))
+            if rotate_anti_clockwise and not CV_fix:
+                img_next = imutils.rotate(img_origin, retry_angle * (retry_count + 1))
                 h, w = img_next.shape[:2]
                 ori = [[0, 0], [w, 0],
                        [w, h], [0, h]]
@@ -130,8 +141,8 @@ if __name__ == '__main__':
                 img_next = cv2.warpPerspective(img_next, M, (img_next.shape[1], img_next.shape[0]))
 
                 # cv2.imshow('car', imutils.resize(img_next, width=1024))
-            else:
-                img_next = imutils.rotate(img_origin, -retry_angle * (rotate_count + 1))
+            elif (not rotate_anti_clockwise) and (not CV_fix):
+                img_next = imutils.rotate(img_origin, -retry_angle * (retry_count + 1))
                 h, w = img_next.shape[:2]
                 ori = [[0, 0], [w, 0],
                        [w, h], [0, h]]
@@ -147,18 +158,23 @@ if __name__ == '__main__':
                 # cv2.imshow('car', imutils.resize(img_next, width=1024))
 
             rotate_anti_clockwise = not rotate_anti_clockwise
-            rotate_count += 1
 
-            if rotate_count > 12:
+            if retry_count > 12 and not CV_fix:
                 print('rotation fix failed')
-                break
+                print('try to predict text boundary with CV_fix')
+                CV_fix = True
+                img_next = img_origin
+                continue
             else:
-                print('retrying at {}'.format(rotate_count))
+                print('retrying at {}'.format(retry_count))
+                retry_count += 1
+                if CV_fix:
+                    break
         else:
-            angle_compensated = retry_angle * np.round(rotate_count / 2)
-            if rotate_count % 2 == 0:
+            angle_compensated = retry_angle * np.round(retry_count / 2)
+            if retry_count % 2 == 0:
                 angle_compensated *= -1
-            print('retry counts: {}, angle compensated: {}°'.format(rotate_count, angle_compensated))
+            print('retry counts: {}, angle compensated: {}°'.format(retry_count, angle_compensated))
             img = imutils.resize(img, width=1024, inter=cv2.INTER_LANCZOS4)
             cv2.imshow('test', img)
             cv2.waitKey(0)

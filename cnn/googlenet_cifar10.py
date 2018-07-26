@@ -21,7 +21,7 @@ import os
 NUM_EPOCHS = 70
 INIT_LR = 1e-1
 
-G = 2
+G = 4
 if G > 1:
     print("[INFO] setting up for multi-gpu")
     # config = tf.ConfigProto()
@@ -45,8 +45,8 @@ def poly_decay(epoch):
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument('-m', '--lpr_model', required=True,
-                help='path to output lpr_model')
+ap.add_argument('-m', '--model', required=True,
+                help='path to output model')
 ap.add_argument('-o', '--output', required=True,
                 help='path to output directory (logs, plots, etc.)')
 args = vars(ap.parse_args())
@@ -91,8 +91,8 @@ jsonPath = os.path.sep.join([args['output'], '{}.json'.format(
 callback = [TrainMonitor(figPath, jsonPath=jsonPath),
             LearningRateScheduler(poly_decay)]
 
-# initialize the optimizer and lpr_model
-print('[INFO] compiling lpr_model...')
+# initialize the optimizer and model
+print('[INFO] compiling model...')
 opt = SGD(lr=INIT_LR, momentum=0.9, nesterov=True)
 
 single_gpu_model = MiniGoogLeNet.build(width=32, height=32,
@@ -104,7 +104,7 @@ if G <= 1:
 # otherwise, we are compiling using multiple GPUs
 else:
     print("[INFO] training with {} GPUs...".format(G))
-    # make the lpr_model parallel
+    # make the model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
 
 model.compile(loss='categorical_crossentropy', optimizer=opt,
@@ -120,6 +120,6 @@ model.fit_generator(aug.flow(trainX, trainY, batch_size=128 * G),
 # save the network to disk
 print('[INFO] serializing network...')
 if G <= 1:
-    model.save(args["lpr_model"])
+    model.save(args["model"])
 else:
-    single_gpu_model.save(args["lpr_model"])
+    single_gpu_model.save(args["model"])

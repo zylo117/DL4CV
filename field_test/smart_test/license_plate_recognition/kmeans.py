@@ -49,7 +49,7 @@ def kMeans(dataSet, k, distMeans=distEclud, createCent=randCent):
                     minIndex = j  # 如果第i个数据点到第j个中心点更近，则将i归属为j
             if clusterAssment[i, 0] != minIndex: clusterChanged = True  # 如果分配发生变化，则需要继续迭代
             clusterAssment[i, :] = minIndex, minDist ** 2  # 并将第i个数据点的分配情况存入字典
-        print(centroids)
+        # print(centroids)
         for cent in range(k):  # 重新计算中心点
             ptsInClust = dataSet[nonzero(clusterAssment[:, 0].A == cent)[0]]  # 去第一列等于cent的所有列
             centroids[cent, :] = mean(ptsInClust, axis=0)  # 算出这些数据的中心点
