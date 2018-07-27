@@ -2,7 +2,8 @@ import cv2
 import imutils
 import numpy as np
 
-from kmeans import kMeans
+from field_test.smart_test.license_plate_recognition.kmeans import kMeans
+from field_test.smart_test.license_plate_recognition.find_color import car_plate_color
 
 
 def deskew(ori_img, iteration=36, remove_bg=False):
@@ -60,14 +61,18 @@ def deskew(ori_img, iteration=36, remove_bg=False):
 def detrap(ori_img):
     # preprocess
     img_debug = ori_img
+
+    # try to extract car license plate using color matching
+    img_debug = car_plate_color(img_debug)
+
     img_debug = imutils.resize(img_debug, width=320, inter=cv2.INTER_LANCZOS4)
     img = cv2.cvtColor(img_debug, cv2.COLOR_BGR2GRAY)
     img = cv2.medianBlur(img, 3)
 
     h, w = img.shape[:2]
 
-    val, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    img = cv2.GaussianBlur(img, (11, 11), 0)
+    val, img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    img = cv2.GaussianBlur(img, (13, 13), 0)
 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
     img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel, iterations=32, borderType=cv2.BORDER_CONSTANT, borderValue=0)
@@ -75,48 +80,33 @@ def detrap(ori_img):
 
     img = cv2.Canny(img, 1, 1)
 
+    # cv2.imshow('img_debug1', img)
+    # cv2.waitKey(0)
+
     h, w = img.shape[:2]
     accum = 10
     lines = cv2.HoughLinesP(img, 1, np.pi / 180, accum, minLineLength=h // 4, maxLineGap=h)
 
     # gather the adjacent lines together
-    # vertical_line = []
-    if lines is not None:
+    if lines is not None and len(lines) >= 4:
         lines1 = lines[:, 0, :]  # extract to 2d
         k_set = []
-        # b_set = []
         for i, (x1, y1, x2, y2) in enumerate(lines1[:]):
-            # if x2 == x1:
-            #     vertical_line.append(x1)
-            #     lines1 = np.delete(lines1, i, axis=0)
-
             k = slope(x1, x2, y1, y2, theta=True)
-            # b = intercept(x1, x2, y1, y2)
             k_set.append(k)
-            # b_set.append(b)
 
-            cv2.line(img_debug, (x1, y1), (x2, y2),
-                     (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), 5)
+            # cv2.line(img_debug, (x1, y1), (x2, y2),
+            #          (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), 5)
 
             # cv2.circle(img_debug, (x1, y1), 5, (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), -1)
             # cv2.circle(img_debug, (x2, y2), 5, (np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)), -1)
 
-        cv2.imshow('img_debug', img_debug)
-        cv2.waitKey(0)
+        # cv2.imshow('img_debug2', img_debug)
+        # cv2.waitKey(0)
         print('line count: {}'.format(len(lines)))
-
-        # try:
-        #     k_set.remove(np.inf)
-        #     b_set.remove(np.inf)
-        # except ValueError:
-        #     pass
 
         k_set = np.asarray(k_set)
         k_set = k_set.reshape((len(k_set), 1))
-        # b_set = np.asarray(b_set)
-        # b_set = b_set.reshape((len(b_set), 1))
-        # vertical_line = np.asarray(vertical_line)
-        # vertical_line = vertical_line.reshape((len(vertical_line), 1))
 
         while True:
             # make sure no nan/inf in k
@@ -143,60 +133,16 @@ def detrap(ori_img):
         dst = np.array(dst).astype(np.float32)
         # compute the perspective transform matrix and then apply it
         M = cv2.getPerspectiveTransform(ori, dst)
-        img_debug = cv2.warpPerspective(img_debug, M, (w, h))
+        old_h,old_w = img_debug.shape[:2]
+        img_debug = cv2.copyMakeBorder(img_debug, int(0.2 * old_h), int(0.2 * old_h), int(0.2 * old_w), int(0.2 * old_w),
+                             cv2.BORDER_CONSTANT, value=0)
 
-        # while True:
-        #     # make sure no nan/inf in b
-        #     b_center, b_cluster = kMeans(b_set, 4)
-        #     b_max = np.max(b_center)
-        #     if not np.isnan(b_max):
-        #         b_center = np.sort(b_center, axis=0)
-        #         # b_center *= 2
-        #         break
-        #
-        # if len(vertical_line) > 1:
-        #     # make sure there are at least 2 v-lines and scatter on left and right of the picture.
-        #     left = False
-        #     right = False
-        #     for vl in vertical_line:
-        #         if vl < w // 2:
-        #             left = True
-        #         if vl > w // 2:
-        #             right = True
-        #
-        #         if left and right:
-        #             break
-        #
-        #     if left and right:
-        #         while True:
-        #             # make sure no nan/inf in vertical line
-        #             v_center, v_cluster = kMeans(vertical_line, 2)
-        #             v_max = np.max(v_center)
-        #             if not np.isnan(v_max):
-        #                 v_center = np.sort(v_center, axis=0)
-        #                 break
-        #
-        # pt1 = line_intersection(k_center[0], b_center[2], k_center[1], b_center[1])
-        # pt2 = line_intersection(k_center[0], b_center[2], k_center[1], b_center[0])
-        # pt3 = line_intersection(k_center[0], b_center[3], k_center[1], b_center[0])
-        # pt4 = line_intersection(k_center[0], b_center[3], k_center[1], b_center[1])
-        #
-        # p_set = [pt1, pt2, pt3, pt4]
-        # # for p in p_set:
-        # #     cv2.circle(img_debug, (p[0], p[1]), 5, (255, 255, 255), 3)
-        #
-        # print()
-        # # l1 : y = k_center[0] * x + b_center[0]
-        # # l2 : y = k_center[1] * x + b_center[1]
-        # # pt1 =
-        #
-        # # k_classify = k_cluster[:,0].astype(np.bool)
-        # # b_classify = b_cluster[:,0].astype(np.bool)
-        # # k1 = lines1[k_classify == True]
-        # # k2 = lines1[k_classify == False]
-        # print()
+        new_h, new_w = img_debug.shape[:2]
+        img_debug = cv2.warpPerspective(img_debug, M, (new_w, new_h), borderMode=cv2.BORDER_CONSTANT, borderValue=0)
 
-        # cv2.imshow('img', img_debug)
+        img_debug = deskew(img_debug, remove_bg=True)
+
+        # cv2.imshow('img_p', img_debug)
         # cv2.waitKey(0)
         return theta_h, M, img_debug
     else:
@@ -234,14 +180,14 @@ def line_intersection(k1, b1, k2, b2):
 
 
 if __name__ == '__main__':
-    # ori_img = cv2.imread('test/1.jpg')
-    ori_img = cv2.imread('f:/temp/test.jpg')
+    ori_img = cv2.imread('test/except.jpg')
+    # ori_img = cv2.imread('f:/temp/test.jpg')
 
-    warp = deskew(ori_img, remove_bg=True)
-    # trap = detrap(ori_img)
+    # warp = deskew(ori_img, remove_bg=True)
+    trap = detrap(ori_img)
 
-    # cv2.imshow('img', ori_img)
+    # cv2.imshow('img_p', ori_img)
     # cv2.waitKey(0)
-    cv2.imshow('warp', warp)
-    cv2.waitKey(0)
-    cv2.imwrite('f:/temp/1231.jpg', warp)
+    # cv2.imshow('warp', warp)
+    # cv2.waitKey(0)
+    # cv2.imwrite('f:/temp/1231.jpg', warp)

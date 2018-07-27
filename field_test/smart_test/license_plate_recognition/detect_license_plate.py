@@ -60,7 +60,7 @@ def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=Fals
     img = img_origin.copy()
 
     for pstr, confidence, rect in result:
-        if confidence > confidence_thresh:
+        if confidence > confidence_thresh and len(pstr) == 7:
             img = drawRectBox(img, rect, pstr + " " + str(round(confidence, 3)))
             print("plate_str:")
             print(pstr)
@@ -91,12 +91,13 @@ if __name__ == '__main__':
     config.gpu_options.per_process_gpu_memory_fraction = 0.8
     tf_session = tf.Session(config=config)
 
-    img_path = "E:/Document/GitHub/DL4CV/datasets/20180705/2018070500283/0111.jpg"
+    img_path = "E:/Document/GitHub/DL4CV/datasets/car_exam/raw_images/2018070500283/0111.jpg"
     lpr_model = load_lpr_model("model/cascade.xml", "model/model12.h5", "model/ocr_plate_all_gru.h5")
 
-    # 加入机制，识别率低于0.90就自动旋转图片5°重新测试，√
-    # 再尼玛识别不出来，就CTPN识别文本位置，从而透视纠正，√
-    # CV纠正车牌变形
+    # 加入机制，识别率低于0.90就往复旋转图片5°并计算透视纠正量进行warp并重新测试，√
+    # 再识别不出来，就CTPN识别文本位置，从而透视纠正，×
+    # OpenCV color-matching + OTSU + morphology + houghline + warp-perspective纠正车牌变形，√
+    # 加入逻辑，两个框重复的时候，车牌识别的内容有冲突时，以字数和车牌数相同的为准
     # SSD检测汽车，再检测车牌，避免干扰
     # SSD检测车牌
     # 检测汽车朝向，对车牌纠正

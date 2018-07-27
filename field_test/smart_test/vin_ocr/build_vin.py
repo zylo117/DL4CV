@@ -25,9 +25,9 @@ for p in pl:
                                borderValue=0)
 
         img = cv2.medianBlur(img, 3)
-        # val, img = cv2.threshold(img, 1, 255, cv2.THRESH_BINARY)
+        # val, img_p = cv2.threshold(img_p, 1, 255, cv2.THRESH_BINARY)
 
-        # cv2.imshow('test', img)
+        # cv2.imshow('test', img_p)
         # cv2.waitKey(0)
 
         text = tesseract.image_to_string(img, lang='eng')

@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 from keras import backend as K
 from field_test.smart_test.license_plate_recognition.deskew import deskew, detrap
-import pytesseract.pytesseract as tesseract
 from keras.models import *
 from keras.layers import *
 
@@ -85,44 +84,17 @@ class LPR:
                 img_alt_gray = cv2.cvtColor(img_bk, cv2.COLOR_BGR2GRAY)
                 val, img_alt_gray = cv2.threshold(img_alt_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-                cv2.imshow('img1', cropped)
-                cv2.waitKey(0)
-                rotation, M, cropped_debug = detrap(cropped)
-                if rotation is not None and M is not None:
-                    cropped = imutils.rotate_bound(cropped, angle=-rotation)
-                    cropped = cv2.warpPerspective(cropped, M, (cropped.shape[1], cropped.shape[0]))
-
-                    # postprocess / extract car plate
+                # cv2.imshow('img1', cropped)
+                # cv2.waitKey(0)
+                rotation, M, cropped = detrap(cropped)
+                if rotation is not None and M is not None and cropped is not None:
                     cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-                    img = cv2.medianBlur(cropped, 3)
-
-                    # remove background
-                    val, img = cv2.threshold(img, val, 255, cv2.THRESH_BINARY)
-                    img = cv2.GaussianBlur(img, (11, 11), 0)
-
-                    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
-                    img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel, iterations=32, borderType=cv2.BORDER_REFLECT101)
-                    img = cv2.dilate(img, None, iterations=2)
-                    _, img = cv2.threshold(img, 1, 255, cv2.THRESH_BINARY)
-
-                    cropped = cv2.bitwise_and(cropped, img)
-
-                    # crop to car plate
-                    coords = np.column_stack(np.where(cropped > 0))  # get all non-zero pixel coords
-                    anchor, size, angle = cv2.minAreaRect(coords)  # bound them with a rotated rect
-                    cropped = cropped[int(anchor[0] - size[0] / 2):int(anchor[0] + size[0] / 2),
-                           int(anchor[1] - size[1] / 2):int(anchor[1] + size[1] / 2)]
-
-                    cropped = cv2.resize(cropped, (320, 110), interpolation=cv2.INTER_LANCZOS4)
-
-                    # enhance one more time
-                    # cropped = cv2.equalizeHist(cropped)
-
                     # stack image in dimension channel to fit the network
+                    cropped = cv2.resize(cropped, (320, 110) ,interpolation=cv2.INTER_LANCZOS4)
                     cropped = np.dstack([cropped, cropped, cropped])
 
-                    cv2.imshow('img2', cropped)
-                    cv2.waitKey(0)
+                    # cv2.imshow('img3', cropped)
+                    # cv2.waitKey(0)
 
             cropped_images.append([cropped, [x, y + padding, w, h]])
 
@@ -207,8 +179,8 @@ class LPR:
         ori_image = ori_image[:, H:T + 2]
         # image = cv2.resize(image, (int(164), int(48)), interpolation=cv2.INTER_LANCZOS4)
 
-        cv2.imshow('peep2', ori_image)
-        cv2.waitKey(0)
+        # cv2.imshow('peep2', ori_image)
+        # cv2.waitKey(0)
 
         return ori_image, rect
 
