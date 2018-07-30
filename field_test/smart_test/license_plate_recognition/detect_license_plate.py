@@ -62,10 +62,10 @@ def detect_single_img(img_origin, lpr_model, confidence_thresh=0.85, imshow=Fals
     for pstr, confidence, rect in result:
         if confidence > confidence_thresh and len(pstr) == 7:
             img = drawRectBox(img, rect, pstr + " " + str(round(confidence, 3)))
-            print("plate_str:")
-            print(pstr)
-            print("plate_confidence")
-            print(confidence)
+            # print("plate_str:")
+            # print(pstr)
+            # print("plate_confidence")
+            # print(confidence)
 
     if imshow:
         cv2.imshow("result", img)
