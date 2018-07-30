@@ -20,9 +20,11 @@ from tools import maths
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-raw_images_path = '../../../datasets/car_exam/raw_images'
+# raw_images_path = '../../../datasets/car_exam/raw_images'
+raw_images_path = '../../../datasets/car_exam/confirmed_images1'
 images_path = '../../../datasets/car_exam/images'
 confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
+unlabeled_images_path = '../../../datasets/car_exam/unlabeled_images'
 
 KEY = {
     # 'license_plate': ['0111', '0112', '0164', '0322', '0323', '0348', '0351']
@@ -147,9 +149,10 @@ def predict_license_plate(img_origin, lpr_model,
         confi = result[:, 1].astype(np.float)
         result = result[np.argmax(confi), 0]
         confi = np.max(confi)
-        return result, confi, img
-    else:
-        return None, 0, None
+        if confi > confidence_thresh:
+            return result, confi, img
+
+    return None, 0, None
 
 
 count = 0
@@ -195,21 +198,29 @@ for p in pl:
                         print('Image No.{}'.format(count))
 
         # if all license_no under the same folder matches, consider it's confirmedly labeled
-        confirmed = 0
-        for i in range(len(license_no)):
-            if license_no[i] == license_no[i - 1]:
-                confirmed += 1
-        if confirmed == len(license_no):
-            confirmed = True
+        if len(license_no) > 1:
+            confirmed = 0
+            for i in range(len(license_no)):
+                if license_no[i] == license_no[i - 1]:
+                    confirmed += 1
+            if confirmed == len(license_no):
+                confirmed = True
+            else:
+                confirmed = False
+
+            if confirmed:
+                # copy confirmed images to confirmed images path
+                confirmed_image_path = confirmed_images_path + '/' + license_no[0] + '/'
+                # os.makedirs(confirmed_image_path, exist_ok=True)
+                shutil.move(imgs_path, confirmed_image_path)
+            else:
+                confirmed_image_path = unlabeled_images_path + '/' + imgs_path.split('/')[-1] + '/'
+                shutil.move(imgs_path, confirmed_image_path)
         else:
-            confirmed = False
+            confirmed_image_path = unlabeled_images_path + '/' + imgs_path.split('/')[-1] + '/'
+            shutil.move(imgs_path, confirmed_image_path)
 
-        # copy confirmed images to confirmed images path
-        confirmed_image_path = confirmed_images_path + '/' + license_no[0] + '/'
-        # os.makedirs(confirmed_image_path, exist_ok=True)
-        shutil.move(imgs_path, confirmed_image_path)
-
-        if count >= 100:
-            raise Exception
+        # if count >= 100:
+        #     raise Exception
 
 print(count)

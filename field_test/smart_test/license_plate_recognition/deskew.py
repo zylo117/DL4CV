@@ -111,6 +111,8 @@ def detrap(ori_img):
         while True:
             # make sure no nan/inf in k
             k_center, k_cluster = kMeans(k_set, 2)
+            if k_center is None or k_cluster is None:
+                k_center = [0, np.pi / 2]
             k_max = np.max(k_center)
             if not np.isnan(k_max):
                 k_center = np.sort(k_center, axis=0)

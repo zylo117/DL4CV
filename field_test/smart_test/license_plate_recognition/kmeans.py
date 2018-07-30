@@ -32,6 +32,10 @@ def randCent(dataSet, k):
 
 # k-means 聚类算法
 def kMeans(dataSet, k, distMeans=distEclud, createCent=randCent):
+    dataSet_deduplicated = set(dataSet.transpose().tolist()[0])
+    if len(dataSet_deduplicated) < k:
+        return None, None
+
     m = dataSet.shape[0]
     clusterAssment = mat(zeros((m, 2)))  # 用于存放该样本属于哪类及质心距离
     # clusterAssment第一列存放该数据所属的中心点，第二列是该数据到中心点的距离

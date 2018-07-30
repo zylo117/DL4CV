@@ -13,6 +13,7 @@ chars = ["京", "沪", "津", "渝", "冀", "晋", "蒙", "辽", "吉", "黑", "
          "Y", "Z", "港", "学", "使", "警", "澳", "挂", "军", "北", "南", "广", "沈", "兰", "成", "济", "海", "民", "航", "空"
          ]
 
+
 class LPR:
     def __init__(self, model_detection, model_finemapping, model_seq_rec):
         self.watch_cascade = cv2.CascadeClassifier(model_detection)
@@ -82,15 +83,19 @@ class LPR:
                 # CV fix
                 img_bk = cropped
                 img_alt_gray = cv2.cvtColor(img_bk, cv2.COLOR_BGR2GRAY)
-                val, img_alt_gray = cv2.threshold(img_alt_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
                 # cv2.imshow('img1', cropped)
                 # cv2.waitKey(0)
                 rotation, M, cropped = detrap(cropped)
                 if rotation is not None and M is not None and cropped is not None:
-                    cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-                    # stack image in dimension channel to fit the network
-                    cropped = cv2.resize(cropped, (320, 110) ,interpolation=cv2.INTER_LANCZOS4)
+                    try:
+                        cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+                        # stack image in dimension channel to fit the network
+                        cropped = cv2.resize(cropped, (320, 110), interpolation=cv2.INTER_LANCZOS4)
+                    except:
+                        cropped = img_alt_gray
+                        pass
+
                     cropped = np.dstack([cropped, cropped, cropped])
 
                     # cv2.imshow('img3', cropped)
