@@ -20,8 +20,7 @@ from tools import maths
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-# raw_images_path = '../../../datasets/car_exam/raw_images'
-raw_images_path = '../../../datasets/car_exam/confirmed_images1'
+raw_images_path = '../../../datasets/car_exam/raw_images'
 images_path = '../../../datasets/car_exam/images'
 confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
 unlabeled_images_path = '../../../datasets/car_exam/unlabeled_images'
