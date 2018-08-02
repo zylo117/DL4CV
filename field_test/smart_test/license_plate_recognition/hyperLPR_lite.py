@@ -86,10 +86,15 @@ class LPR:
 
                 # cv2.imshow('img1', cropped)
                 # cv2.waitKey(0)
-                rotation, M, cropped = detrap(cropped)
-                if rotation is not None and M is not None and cropped is not None:
+                cropped = detrap(cropped)
+
+                if cropped is not None and cropped.shape[0] > 0:
+                    cv2.imshow('img3', cropped)
+                    cv2.waitKey(0)
+
                     try:
                         cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+
                         # stack image in dimension channel to fit the network
                         cropped = cv2.resize(cropped, (320, 110), interpolation=cv2.INTER_LANCZOS4)
                     except:
@@ -97,9 +102,6 @@ class LPR:
                         pass
 
                     cropped = np.dstack([cropped, cropped, cropped])
-
-                    # cv2.imshow('img3', cropped)
-                    # cv2.waitKey(0)
 
             cropped_images.append([cropped, [x, y + padding, w, h]])
 
@@ -206,7 +208,8 @@ class LPR:
             if fine_mapping and not use_CV_fix:
                 plate, rect = self.finemappingVertical(plate, rect)
 
-            res, confidence = self.recognizeOne(plate)
-            res_set.append([res, confidence, rect])
+            if plate.shape[0] > 0:
+                res, confidence = self.recognizeOne(plate)
+                res_set.append([res, confidence, rect])
 
         return res_set

@@ -20,6 +20,11 @@ from tools import maths
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+# raw_images_path = '../../../datasets/car_exam/raw_images'
+# images_path = '../../../datasets/car_exam/images'
+# confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
+# unlabeled_images_path = '../../../datasets/car_exam/unlabeled_images'
+
 raw_images_path = '../../../datasets/car_exam/raw_images'
 images_path = '../../../datasets/car_exam/images'
 confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
@@ -125,7 +130,7 @@ def predict_license_plate(img_origin, lpr_model,
 
             rotate_anti_clockwise = not rotate_anti_clockwise
 
-            if (retry_count > 0 or confidence_max > 0.85) and not CV_fix:
+            if (retry_count > 6 or confidence_max > 0.85) and not CV_fix:
                 print('rotation fix failed')
                 print('try to predict text boundary with CV_fix')
                 CV_fix = True
@@ -206,8 +211,8 @@ for p in pl:
         # if all license_no under the same folder matches, consider it's confirmedly labeled
         if len(license_no) > 1:
             confirmed = 0
-            if consistency_test(license_no) == 3:
-            # if consistency_test(license_no) >= 2:
+            # if consistency_test(license_no) == 3:
+            if consistency_test(license_no) >= 2:
                 confirmed = True
             else:
                 confirmed = False
