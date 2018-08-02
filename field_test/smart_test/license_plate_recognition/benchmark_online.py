@@ -6,24 +6,18 @@
 # SSD检测汽车，再检测车牌，避免干扰
 # SSD检测车牌
 # 多个车牌检测模型ensemble
-
+import base64
+import requests
 import shutil
 
 import cv2
 import os
-import tensorflow as tf
 import numpy as np
 import imutils
+import json
 
-from field_test.smart_test.license_plate_recognition.detect_license_plate import load_lpr_model, detect_single_img
-from tools import maths
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
-# raw_images_path = '../../../datasets/car_exam/raw_images'
-# images_path = '../../../datasets/car_exam/images'
-# confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
-# unlabeled_images_path = '../../../datasets/car_exam/unlabeled_images'
+# SECRET_KEY = 'FR0M+he5hadow1\'VEc0ME'
+SECRET_KEY = 'sk_DEMODEMODEMODEMODEMODEMO'
 
 raw_images_path = '../../../datasets/car_exam/raw_images'
 images_path = '../../../datasets/car_exam/images'
@@ -31,140 +25,10 @@ confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
 unlabeled_images_path = '../../../datasets/car_exam/unlabeled_images'
 
 KEY = {
-    # 'license_plate': ['0111', '0112', '0164', '0322', '0323', '0348', '0351']
-    'license_plate': ['0111', '0112', '0164']
+    'license_plate': ['0111', '0112', '0164', '0322', '0323', '0348', '0351', '0352']
+    # 'license_plate': ['0111', '0112', '0164']
 
 }
-
-# init tensorflow session
-config = tf.ConfigProto()
-# set gpu mem usage ratio
-config.gpu_options.per_process_gpu_memory_fraction = 0.8
-tf_session = tf.Session(config=config)
-
-# load fusion model of license plate recognition
-# cascade classifier, finemapping model,,ocr model
-lpr_model = load_lpr_model("model/cascade.xml", "model/model12.h5", "model/ocr_plate_all_gru.h5")
-
-
-def predict_license_plate(img_origin, lpr_model,
-                          retry_angle=5,
-                          confidence_thresh=0.90):
-    rotate_anti_clockwise = True
-    retry_count = 0
-    img_next = img_origin
-
-    CV_fix = False
-    while True:
-        result, img = detect_single_img(img_next, lpr_model, confidence_thresh=confidence_thresh,
-                                        imshow=False,
-                                        fine_mapping=True, use_CV_fix=CV_fix)
-
-        # pre-filter
-        for r in result:
-            # make sure license No. length is 7
-            confidence = r[1]
-            if confidence > confidence_thresh:
-                if len(r[0]) != 7:
-                    result.remove(r)
-
-        # remove the overlapping result
-        result_com = maths.combination(result, 2)
-        for rc in result_com:
-            if rc[0][1] > confidence_thresh and rc[1][1] > confidence_thresh:
-                coincide, area0, area1 = maths.rect_coincide(rc[0][2], rc[1][2])
-                if coincide > 0.6:
-                    if area0 < area1:
-                        try:
-                            result.remove(rc[0])
-                        except:
-                            pass
-                    else:
-                        try:
-                            result.remove(rc[1])
-                        except:
-                            pass
-
-        print(result)
-
-        confidence_set = []
-        for r in result:
-            confidence_set.append(r[1])
-
-        if len(confidence_set) >= 1:
-            confidence_max = np.max(np.array(confidence_set))
-        else:
-            confidence_max = 0
-
-        if confidence_max < confidence_thresh:
-            if rotate_anti_clockwise and not CV_fix:
-                img_next = imutils.rotate(img_origin, retry_angle * (retry_count + 1))
-                h, w = img_next.shape[:2]
-                ori = [[0, 0], [w, 0],
-                       [w, h], [0, h]]
-                ori = np.array(ori).astype(np.float32)
-                dst = [[np.tan(np.deg2rad(retry_angle * 2)) * w, 0], [w, np.tan(np.deg2rad(retry_angle * 2)) * h],
-                       [w, h], [0, h]]
-                dst = np.array(dst).astype(np.float32)
-
-                # compute the perspective transform matrix and then apply it
-                M = cv2.getPerspectiveTransform(ori, dst)
-                img_next = cv2.warpPerspective(img_next, M, (img_next.shape[1], img_next.shape[0]))
-
-                # cv2.imshow('car', imutils.resize(img_next, width=1024))
-            elif (not rotate_anti_clockwise) and (not CV_fix):
-                img_next = imutils.rotate(img_origin, -retry_angle * (retry_count + 1))
-                h, w = img_next.shape[:2]
-                ori = [[0, 0], [w, 0],
-                       [w, h], [0, h]]
-                ori = np.array(ori).astype(np.float32)
-                dst = [[0, np.tan(np.deg2rad(retry_angle * 2)) * h], [w * (1 - np.tan(np.deg2rad(retry_angle * 2))), 0],
-                       [w, h], [0, h]]
-                dst = np.array(dst).astype(np.float32)
-
-                # compute the perspective transform matrix and then apply it
-                M = cv2.getPerspectiveTransform(ori, dst)
-                img_next = cv2.warpPerspective(img_next, M, (img_next.shape[1], img_next.shape[0]))
-
-                # cv2.imshow('car', imutils.resize(img_next, width=1024))
-
-            rotate_anti_clockwise = not rotate_anti_clockwise
-
-            if (retry_count > 6 or confidence_max > 0.85) and not CV_fix:
-                print('rotation fix failed')
-                print('try to predict text boundary with CV_fix')
-                CV_fix = True
-                img_next = img_origin
-                continue
-            else:
-                print('retrying at {}'.format(retry_count))
-                retry_count += 1
-                if CV_fix:
-                    break
-        else:
-            angle_compensated = retry_angle * np.round(retry_count / 2)
-            if retry_count % 2 == 0:
-                angle_compensated *= -1
-            print('retry counts: {}, angle compensated: {}°'.format(retry_count, angle_compensated))
-            break
-
-    if len(result) > 0:
-        result = np.array(result, dtype=object)
-        confi = result[:, 1].astype(np.float)
-        result = result[np.argmax(confi), 0]
-        confi = np.max(confi)
-        if confi > confidence_thresh:
-            return result, confi, img
-
-    return None, 0, None
-
-
-def consistency_test(iterable):
-    length = len(iterable)
-    iterable = list(set(iterable))
-    # return how many element that consists
-    return length - len(iterable) + 1
-
 
 count = 0
 # enter images paths of many cars
@@ -187,49 +51,15 @@ for p in pl:
                     if K in img_path:
                         count += 1
                         # start processing
-                        img = cv2.imread(img_path)
-                        # cv2.imshow('test', imutils.resize(img, width=1024))
-                        # cv2.waitKey(0)
+                        with open(img_path, 'rb') as image_file:
+                            img_base64 = base64.b64encode(image_file.read())
 
-                        # predict licnese plate
-                        result, confidence, img = predict_license_plate(img, lpr_model, retry_angle=5,
-                                                                        confidence_thresh=0.90)
-                        print(result, confidence)
-                        if result is not None and confidence > 0.90 and img is not None:
-                            license_no.append(result)
-
-                            output_path = images_path + '/' + result + '/'
-                            if not os.path.exists(output_path):
-                                os.makedirs(output_path, exist_ok=True)
-
-                            # cv2.imshow('test', imutils.resize(img, width=1024, inter=cv2.INTER_LANCZOS4))
-                            # cv2.waitKey(0)
-                            cv2.imencode('.jpg', img)[1].tofile(output_path + img_p)
-
-                        print('Image No.{}'.format(count))
-
-        # if all license_no under the same folder matches, consider it's confirmedly labeled
-        if len(license_no) > 1:
-            confirmed = 0
-            # if consistency_test(license_no) == 3:
-            if consistency_test(license_no) >= 2:
-                confirmed = True
-            else:
-                confirmed = False
-
-            if confirmed:
-                # copy confirmed images to confirmed images path
-                confirmed_image_path = confirmed_images_path + '/' + license_no[0] + '/'
-                # os.makedirs(confirmed_image_path, exist_ok=True)
-                shutil.move(imgs_path, confirmed_image_path)
-            else:
-                confirmed_image_path = unlabeled_images_path + '/' + imgs_path.split('/')[-1] + '/'
-                shutil.move(imgs_path, confirmed_image_path)
-        else:
-            confirmed_image_path = unlabeled_images_path + '/' + imgs_path.split('/')[-1] + '/'
-            shutil.move(imgs_path, confirmed_image_path)
-
-        # if count >= 100:
-        #     raise Exception
-
-print(count)
+                        url = 'https://api.openalpr.com/v2/recognize_bytes?recognize_vehicle=1&country=cn&secret_key=%s' % (
+                            SECRET_KEY)
+                        r = requests.post(url, data=img_base64)
+                        r = r.json()
+                        js = json.dumps(r, indent=2)
+                        info_file = open(img_path.split('.jpg')[0] + '.json', 'w')
+                        info_file.write(js)
+                        info_file.close()
+                        print(count)

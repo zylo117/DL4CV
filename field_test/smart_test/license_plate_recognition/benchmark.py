@@ -125,7 +125,7 @@ def predict_license_plate(img_origin, lpr_model,
 
             rotate_anti_clockwise = not rotate_anti_clockwise
 
-            if (retry_count > 0 or confidence_max > 0.85) and not CV_fix:
+            if (retry_count > 6 or confidence_max > 0.85) and not CV_fix:
                 print('rotation fix failed')
                 print('try to predict text boundary with CV_fix')
                 CV_fix = True
