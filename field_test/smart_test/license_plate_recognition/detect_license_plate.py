@@ -14,7 +14,7 @@ from field_test.smart_test.license_plate_recognition.hyperLPR_lite import LPR
 
 def load_lpr_model(pr_rough_detect_classifier, pr_fine_detect_model, pr_text_ocr_model):
     """
-    load license plate recognition lpr_model
+    load license plate recognition model
     :param pr_rough_detect_classifier:
     :param pr_fine_detect_model:
     :param pr_text_ocr_model:
@@ -181,4 +181,4 @@ if __name__ == '__main__':
             cv2.waitKey(0)
             break
 
-    # speed_benchmark(img_path, lpr_model)
+    # speed_benchmark(img_path, model)

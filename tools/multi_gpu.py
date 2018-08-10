@@ -19,17 +19,17 @@ https://github.com/avolkov1/keras_experiments/blob/master/keras_exp/multigpu/
 https://github.com/fchollet/keras/blob/master/keras/utils/training_utils.py
 
 Subclasses the standard Keras Model and adds multi-GPU support.
-It works by creating a copy of the lpr_model on each GPU. Then it slices
-the inputs and sends a slice to each copy of the lpr_model, and then
+It works by creating a copy of the model on each GPU. Then it slices
+the inputs and sends a slice to each copy of the model, and then
 merges the outputs together and applies the loss on the combined
 outputs.
 """
 # not working for custom Sequential.
-# For custom Sequential, just use "lpr_model = multi_gpu_model(single_gpu_model, gpus=HOW_MANY_GPU_YOU_NEED)"
+# For custom Sequential, just use "model = multi_gpu_model(single_gpu_model, gpus=HOW_MANY_GPU_YOU_NEED)"
 class ParallelStandardModel(KM.Model):
     def __init__(self, keras_model, gpu_count):
         """Class constructor.
-        keras_model: The Keras lpr_model to parallelize
+        keras_model: The Keras model to parallelize
         gpu_count: Number of GPUs. Must be > 1
         """
         self.inner_model = keras_model
@@ -39,7 +39,7 @@ class ParallelStandardModel(KM.Model):
                                                     outputs=merged_outputs)
 
     def __getattribute__(self, attrname):
-        """Redirect loading and saving methods to the inner lpr_model. That's where
+        """Redirect loading and saving methods to the inner model. That's where
         the weights are stored."""
         if 'load' in attrname or 'save' in attrname:
             return getattr(self.inner_model, attrname)
@@ -52,8 +52,8 @@ class ParallelStandardModel(KM.Model):
         self.inner_model.summary(*args, **kwargs)
 
     def make_parallel(self):
-        """Creates a new wrapper lpr_model that consists of multiple replicas of
-        the original lpr_model placed on different GPUs.
+        """Creates a new wrapper model that consists of multiple replicas of
+        the original model placed on different GPUs.
         """
         # Slice inputs. Slice inputs on the CPU to avoid sending a copy
         # of the full inputs to all GPUs. Saves on bandwidth and memory.
@@ -66,7 +66,7 @@ class ParallelStandardModel(KM.Model):
         for i in range(len(self.inner_model.outputs)):
             outputs_all.append([])
 
-        # Run the lpr_model call() on each GPU to place the ops there
+        # Run the model call() on each GPU to place the ops there
         for i in range(self.gpu_count):
             with tf.device('/gpu:%d' % i):
                 with tf.name_scope('tower_%d' % i):
@@ -77,7 +77,7 @@ class ParallelStandardModel(KM.Model):
                         KL.Lambda(lambda s: input_slices[name][i],
                                   output_shape=lambda s: (None,) + s[1:])(tensor)
                         for name, tensor in zipped_inputs]
-                    # Create the lpr_model replica and get the outputs
+                    # Create the model replica and get the outputs
                     outputs = self.inner_model(inputs)
                     if not isinstance(outputs, list):
                         outputs = [outputs]
@@ -105,9 +105,9 @@ class ParallelStandardModel(KM.Model):
 
 
 """
-super important if you wish to train on multi-gpus# keras has a bug that can't save multi-gpu lpr_model
+super important if you wish to train on multi-gpus# keras has a bug that can't save multi-gpu model
 because it's scatter into N pieces(depending on count of GPUs)
-So all you need to do is saving the lpr_model which haven't been scattered.
+So all you need to do is saving the model which haven't been scattered.
 
 Use it almost like ModelCheckpoint
 
@@ -140,13 +140,13 @@ class ParallelModelCheckpoint(ModelCheckpoint):
             if self.save_best_only:
                 current = logs.get(self.monitor)
                 if current is None:
-                    warnings.warn('Can save best lpr_model only with %s available, '
+                    warnings.warn('Can save best model only with %s available, '
                                   'skipping.' % (self.monitor), RuntimeWarning)
                 else:
                     if self.monitor_op(current, self.best):
                         if self.verbose > 0:
                             print('\nEpoch %05d: %s improved from %0.5f to %0.5f,'
-                                  ' saving lpr_model to %s'
+                                  ' saving model to %s'
                                   % (epoch + 1, self.monitor, self.best,
                                      current, filepath))
                         self.best = current
@@ -160,7 +160,7 @@ class ParallelModelCheckpoint(ModelCheckpoint):
                                   (epoch + 1, self.monitor, self.best))
             else:
                 if self.verbose > 0:
-                    print('\nEpoch %05d: saving lpr_model to %s' % (epoch + 1, filepath))
+                    print('\nEpoch %05d: saving model to %s' % (epoch + 1, filepath))
                 if self.save_weights_only:
                     self.model_to_save.save_weights(filepath, overwrite=True)
                 else:
@@ -168,7 +168,7 @@ class ParallelModelCheckpoint(ModelCheckpoint):
 
 
 if __name__ == "__main__":
-    # Testing code below. It creates a simple lpr_model to train on MNIST and
+    # Testing code below. It creates a simple model to train on MNIST and
     # tries to run it on 2 GPUs. It saves the graph so it can be viewed
     # in TensorBoard. Run it as:
     #
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     # Root directory of the project
     ROOT_DIR = os.path.abspath("../")
 
-    # Directory to save logs and trained lpr_model
+    # Directory to save logs and trained model
     MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     print('x_train shape:', x_train.shape)
     print('x_test shape:', x_test.shape)
 
-    # Build data generator and lpr_model
+    # Build data generator and model
     datagen = ImageDataGenerator()
     model = build_model(x_train, 10)
 

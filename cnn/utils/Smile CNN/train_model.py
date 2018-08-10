@@ -15,7 +15,7 @@ from cnn.nn.conv.lenet import LeNet
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset of faces")
-ap.add_argument("-m", "--lpr_model", required=True, help="path to output lpr_model")
+ap.add_argument("-m", "--model", required=True, help="path to output model")
 args = vars(ap.parse_args())
 
 # initialize the list of data and labels
@@ -54,8 +54,8 @@ classWeight = classTotals.max() / classTotals
 # the data for training and the remaining 20% for testing
 trainX, testX, trainY, testY = train_test_split(data, labels, test_size=0.2, stratify=labels, random_state=42)
 
-# initialize the lpr_model
-print("[INFO] compiling lpr_model...")
+# initialize the model
+print("[INFO] compiling model...")
 model = LeNet.build(width=28, height=28, depth=1, classes=2)
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
 
@@ -75,9 +75,9 @@ print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=le.classes_))
 
-# save the lpr_model to disk
+# save the model to disk
 print("[INFO] serializing network...")
-model.save(args["lpr_model"])
+model.save(args["model"])
 
 # plot the training loss and accuracy
 plt.style.use("ggplot")

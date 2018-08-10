@@ -91,7 +91,7 @@ for epoch in np.arange(args["epochs"]):
     if epoch == 0 or (epoch + 1) % 5 == 0:
         print("[INFO] epoch=%d, loss=%.7f" % (int(epoch + 1), loss))
 
-# evaluate our lpr_model
+# evaluate our model
 print("[INFO] evaluating...")
 preds = predict(testX, W)
 print(classification_report(testY, preds))

@@ -92,7 +92,7 @@ class DeeperGoogLeNet:
             inputShape = (depth, height, width)
             chanDim = 1
 
-        # define the lpr_model input, followed by a sequence of CONV =>
+        # define the model input, followed by a sequence of CONV =>
         # POOL => (CONV * 2) => POOL layers
         inputs = Input(shape=inputShape)
         x = DeeperGoogLeNet.conv_module(inputs, 64, 5, 5, (1, 1),
@@ -178,7 +178,7 @@ class DeeperGoogLeNet:
                   name='labels')(x)
         x = Activation('softmax', name='softmax')(x)
 
-        # create the lpr_model
+        # create the model
         model = Model(inputs, x, name='googlenet')
 
         # return the constructed network architecture

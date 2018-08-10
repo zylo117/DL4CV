@@ -9,7 +9,7 @@ from keras import backend as K
 class ShallowNet:
     @staticmethod
     def build(width, height, depth, classes):
-        # initialize the lpr_model along with the input shape to be
+        # initialize the model along with the input shape to be
         # "channels last"
         model = Sequential()
         inputShape = (height, width, depth)

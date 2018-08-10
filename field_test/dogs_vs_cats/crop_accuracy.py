@@ -20,7 +20,7 @@ cp = CropPreprocessor(227, 227)
 iap = ImageToArrayPreprocessor()
 
 # load the pretrained network
-print('[INFO] loading lpr_model...')
+print('[INFO] loading model...')
 model = load_model(config.MODEL_PATH)
 
 # initialize the testing dataset generator, then make predictions on

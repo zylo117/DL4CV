@@ -8,7 +8,7 @@ import cv2
 ap = argparse.ArgumentParser()
 ap.add_argument("-c", "--cascade", required=True,
                 help="path to where the face cascade resides")
-ap.add_argument("-m", "--lpr_model", required=True,
+ap.add_argument("-m", "--model", required=True,
                 help="path to pre-trained smile detector CNN")
 ap.add_argument("-v", "--video",
                 help="path to the (optional) video file")
@@ -16,7 +16,7 @@ args = vars(ap.parse_args())
 
 # load the face detector cascade and smile detector CNN
 detector = cv2.CascadeClassifier(args["cascade"])
-model = load_model(args["lpr_model"])
+model = load_model(args["model"])
 
 # if a video path was not supplied, grab the reference to the webcam
 if not args.get("video", False):

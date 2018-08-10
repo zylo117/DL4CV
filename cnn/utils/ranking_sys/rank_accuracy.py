@@ -7,13 +7,13 @@ import h5py
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--db", required=True,
                 help="path HDF5 database")
-ap.add_argument("-m", "--lpr_model", required=True,
-                help="path to pre-trained lpr_model")
+ap.add_argument("-m", "--model", required=True,
+                help="path to pre-trained model")
 args = vars(ap.parse_args())
 
-# load the pre-trained lpr_model
-print("[INFO] loading pre-trained lpr_model...")
-model = pickle.loads(open(args["lpr_model"], "rb").read())
+# load the pre-trained model
+print("[INFO] loading pre-trained model...")
+model = pickle.loads(open(args["model"], "rb").read())
 
 # open the HDF5 database for reading then determine the index of
 # the training and testing split, provided that this data was

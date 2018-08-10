@@ -37,7 +37,7 @@ le = LabelBinarizer()
 trainY = le.fit_transform(trainY)
 testY = le.fit_transform(testY)
 
-# initialize the optimizer and lpr_model
+# initialize the optimizer and model
 opt = SGD(lr=0.01)
 model = LeNet.build(width=28, height=28, depth=1, classes=10)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])

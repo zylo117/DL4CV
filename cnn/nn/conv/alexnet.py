@@ -13,7 +13,7 @@ from keras import backend as K
 class AlexNet:
     @staticmethod
     def build(width, height, depth, classes, reg=0.0002):
-        # initialize the lpr_model along with the input shape to be
+        # initialize the model along with the input shape to be
         # "channels last" and the channels dimension itself
         model = Sequential()
         inputShape = (height, width, depth)

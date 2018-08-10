@@ -24,7 +24,7 @@ class HDF5DatasetGenerator:
         # initialize the epoch count
         epochs = 0
 
-        # keep looping infinitely -- the lpr_model will stop once we have
+        # keep looping infinitely -- the model will stop once we have
         # reach the desired number of epochs
         while epochs < passes:
             # loop over the HDF5 dataset

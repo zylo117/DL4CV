@@ -18,7 +18,7 @@ import os
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset")
-ap.add_argument("-m", "--lpr_model", required=True, help="path to output lpr_model")
+ap.add_argument("-m", "--model", required=True, help="path to output model")
 args = vars(ap.parse_args())
 
 # construct the image generator for data augmentation
@@ -67,18 +67,18 @@ baseModel = VGG16(weights="imagenet", include_top=False,
 # followed by a softmax classifier
 headModel = FCHeadNet.build(baseModel, len(classNames), 256)
 
-# place the head FC lpr_model on top of the base lpr_model -- this will
-# become the actual lpr_model we will train
+# place the head FC model on top of the base model -- this will
+# become the actual model we will train
 model = Model(inputs=baseModel.input, outputs=headModel)
 
-# loop over all layers in the base lpr_model and freeze them so they
+# loop over all layers in the base model and freeze them so they
 # will *not* be updated during the training process
 for layer in baseModel.layers:
     layer.trainable = False
 
-# compile our lpr_model (this needs to be done after our setting our
+# compile our model (this needs to be done after our setting our
 # layers to being non-trainable
-print("[INFO] compiling lpr_model...")
+print("[INFO] compiling model...")
 opt = RMSprop(lr=0.001)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
               metrics=["accuracy"])
@@ -97,26 +97,26 @@ model.fit_generator(aug.flow(trainX, trainY, batch_size=2),
 for layer in baseModel.layers[15:]:
     layer.trainable = True
 
-# for the changes to the lpr_model to take affect we need to recompile
-# the lpr_model, this time using SGD with a *very* small learning rate
-print("[INFO] re-compiling lpr_model...")
+# for the changes to the model to take affect we need to recompile
+# the model, this time using SGD with a *very* small learning rate
+print("[INFO] re-compiling model...")
 opt = SGD(lr=0.001)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
               metrics=["accuracy"])
 
-# train the lpr_model again, this time fine-tuning *both* the final set
+# train the model again, this time fine-tuning *both* the final set
 # of CONV layers along with our set of FC layers
-print("[INFO] fine-tuning lpr_model...")
+print("[INFO] fine-tuning model...")
 model.fit_generator(aug.flow(trainX, trainY, batch_size=2), validation_data=(testX, testY),
                     epochs=100, steps_per_epoch=len(trainX) // 2, verbose=1)
 
-# evaluate the network on the fine-tuned lpr_model
+# evaluate the network on the fine-tuned model
 print("[INFO] evaluating after fine-tuning...")
 predictions = model.predict(testX, batch_size=2)
 print(classification_report(testY.argmax(axis=1),
                             predictions.argmax(axis=1),
                             target_names=classNames))
 
-# save the lpr_model to disk
-print("[INFO] serializing lpr_model...")
-model.save(args["lpr_model"])
+# save the model to disk
+print("[INFO] serializing model...")
+model.save(args["model"])

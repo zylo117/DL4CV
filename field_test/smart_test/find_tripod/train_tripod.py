@@ -38,7 +38,7 @@ if G > 1:
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--weights", required=True, help="path to weights directory")
 ap.add_argument("-b", "--best_only", type=bool, default=True,
-                help="If True, lpr_model will only write a single file with best result")
+                help="If True, model will only write a single file with best result")
 ap.add_argument("-v", "--view", help="save image of training status")
 args = vars(ap.parse_args())
 
@@ -68,7 +68,7 @@ valGen = HDF5DatasetGenerator(config.VAL_HDF5, BATCHSIZE * 2,
                               preprocessors=[sp, mp, iap], classes=2)
 
 # initialize the optimizer
-print('[INFO] compiling lpr_model...')
+print('[INFO] compiling model...')
 def poly_decay(epoch):
     # initialize the maximum number of epochs, base learning rate,
     # and power of the polynomial
@@ -94,15 +94,15 @@ if G <= 1:
 else:
     print("[INFO] training with {} GPUs...".format(G))
 
-    # we'll store a copy of the lpr_model on *every* GPU and then combine
+    # we'll store a copy of the model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
-    # make the lpr_model parallel
+    # make the model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
 
 model.compile(loss='binary_crossentropy', optimizer=opt,
               metrics=['accuracy'])
 
-# construct the callback to save only the *best* lpr_model to disk
+# construct the callback to save only the *best* model to disk
 # based on the validation loss
 if not args["best_only"]:
     fname = os.path.sep.join([args["weights"], "weights-{epoch:03d}-{val_loss:.4f}.hdf5"])
@@ -110,11 +110,11 @@ else:
     fname = os.path.sep.join([args["weights"], "{}.hdf5".format(datetime.date.today())])
 
 if G <= 1:
-    print("[INFO] outputing lpr_model checkpoints...")
+    print("[INFO] outputing model checkpoints...")
     checkpoint = ModelCheckpoint(filepath=fname, monitor="val_loss", mode="min",
                                  save_best_only=True, verbose=1)
 else:
-    print("[INFO] outputing parallel lpr_model checkpoints...")
+    print("[INFO] outputing parallel model checkpoints...")
     checkpoint = ParallelModelCheckpoint(single_gpu_model, filepath=fname, monitor="val_loss", mode="min",
                                          save_best_only=True, save_weights_only=False, verbose=1)
 callbacks = [checkpoint]
@@ -130,8 +130,8 @@ H = model.fit_generator(
     callbacks=callbacks, verbose=1
 )
 
-# save the lpr_model to file
-print('[INFO] serializing lpr_model...')
+# save the model to file
+print('[INFO] serializing model...')
 single_gpu_model.save(config.MODEL_PATH, overwrite=True)
 
 # close the HDF5 datasets

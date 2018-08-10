@@ -112,7 +112,7 @@ for i in np.arange(0, len(imagePaths), bs):
     # our actual features
     batchImages = np.vstack(batchImages)
     features = model.predict(batchImages, batch_size=bs)
-    # features = lpr_model.predict_generator(aug.flow(batchImages, batchLabels, save_to_dir='./output/aug/',
+    # features = model.predict_generator(aug.flow(batchImages, batchLabels, save_to_dir='./output/aug/',
     #                                             save_format='jpeg', save_prefix='aug'), steps=1,
     #                                    max_queue_size=bs)
 

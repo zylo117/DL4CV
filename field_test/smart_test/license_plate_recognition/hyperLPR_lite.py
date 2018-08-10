@@ -191,6 +191,25 @@ class LPR:
 
         return ori_image, rect
 
+    def finemappingVertical_alt(self, image):
+        ori_image = image
+        resized = cv2.resize(image, (66, 16), interpolation=cv2.INTER_LANCZOS4)
+        resized = resized.astype(np.float) / 255
+        res_raw = self.modelFineMapping.predict(np.array([resized]))[0]
+        res = res_raw * ori_image.shape[1]
+        res = res.astype(np.int)
+        H, T = res
+        H -= 3
+        if H < 0:
+            H = 0
+        T += 2
+        if T >= ori_image.shape[1] - 1:
+            T = ori_image.shape[1] - 1
+
+        ori_image = ori_image[:, H:T + 2]
+
+        return ori_image
+
     def recognizeOne(self, src):
         x_tempx = src
         x_temp = cv2.resize(x_tempx, (164, 48), interpolation=cv2.INTER_LANCZOS4)
@@ -205,7 +224,7 @@ class LPR:
         res_set = []
         for j, image in enumerate(images):
             (plate, rect) = image
-            if fine_mapping and not use_CV_fix:
+            if fine_mapping:
                 plate, rect = self.finemappingVertical(plate, rect)
 
             if plate.shape[0] > 0:

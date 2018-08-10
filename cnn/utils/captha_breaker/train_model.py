@@ -16,7 +16,7 @@ import os
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset")
-ap.add_argument("-m", "--lpr_model", required=True, help="path to output lpr_model")
+ap.add_argument("-m", "--model", required=True, help="path to output model")
 args = vars(ap.parse_args())
 
 # initialize the data and labels
@@ -50,11 +50,11 @@ lb = LabelBinarizer()
 trainY = lb.fit_transform(trainY)
 testY = lb.fit_transform(testY)
 
-# initialize the lpr_model
-print("[INFO] compiling lpr_model...")
+# initialize the model
+print("[INFO] compiling model...")
 model = LeNet.build(width=28, height=28, depth=1, classes=9)
-# lpr_model = ShallowNet.build(width=28, height=28, depth=1, classes=9)
-# lpr_model = MiniVGGNet.build(width=28, height=28, depth=1, classes=9)
+# model = ShallowNet.build(width=28, height=28, depth=1, classes=9)
+# model = MiniVGGNet.build(width=28, height=28, depth=1, classes=9)
 opt = SGD(lr=0.01)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 
@@ -67,9 +67,9 @@ print("[INFO] evaluating network...")
 predictions = model.predict(testX, batch_size=32)
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 
-# save the lpr_model to disk
+# save the model to disk
 print("[INFO] serializing network...")
-model.save(args["lpr_model"])
+model.save(args["model"])
 
 # plot the training + testing loss and accuracy
 plt.style.use("ggplot")

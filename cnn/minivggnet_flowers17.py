@@ -53,7 +53,7 @@ trainY = LabelBinarizer().fit_transform(trainY)
 testY = LabelBinarizer().fit_transform(testY)
 
 # convert the labels from integers to vectors
-print("[INFO] compiling lpr_model...")
+print("[INFO] compiling model...")
 opt = SGD(lr=0.05)
 
 if G <= 1:
@@ -64,11 +64,11 @@ if G <= 1:
 else:
     print("[INFO] training with {} GPUs...".format(G))
 
-    # we'll store a copy of the lpr_model on *every* GPU and then combine
+    # we'll store a copy of the model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
     single_gpu_model = MiniVGGNet.build(width=64, height=64, depth=3, classes=len(classNames))
 
-    # make the lpr_model parallel
+    # make the model parallel
     model = multi_gpu_model(single_gpu_model, gpus=G)
 
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])

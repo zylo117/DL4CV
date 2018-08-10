@@ -43,8 +43,8 @@ aug = ImageDataGenerator(rotation_range=10,
 
 # loop over the number of models to train
 for i in np.arange(args["num_models"]):
-    # initialize the optimizer and lpr_model
-    print("[INFO] training lpr_model {}/{}".format(i + 1, args["num_models"]))
+    # initialize the optimizer and model
+    print("[INFO] training model {}/{}".format(i + 1, args["num_models"]))
     opt = SGD(lr=0.01, decay=0.01 / 40, momentum=0.9, nesterov=True)
     model = MiniVGGNet.build(width=32, height=32, depth=3, classes=10)
     model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
@@ -54,8 +54,8 @@ for i in np.arange(args["num_models"]):
                             validation_data=(testX, testY), epochs=40,
                             steps_per_epoch=len(trainX) // 64, verbose=1)
 
-    # save the lpr_model to disk
-    p = [args["models"], "model_{}.lpr_model".format(i)]
+    # save the model to disk
+    p = [args["models"], "model_{}.model".format(i)]
     model.save(os.path.sep.join(p))
 
     # evaluate the network
@@ -79,7 +79,7 @@ for i in np.arange(args["num_models"]):
     plt.plot(np.arange(40), H.history["val_loss"], label="val_loss")
     plt.plot(np.arange(40), H.history["acc"], label="train_acc")
     plt.plot(np.arange(40), H.history["val_acc"], label="val_acc")
-    plt.title("Training Loss and Accuracy for lpr_model {}".format(i))
+    plt.title("Training Loss and Accuracy for model {}".format(i))
     plt.xlabel("Epoch #")
     plt.ylabel("Loss/Accuracy")
     plt.legend()

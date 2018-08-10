@@ -13,10 +13,10 @@ import cv2
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="path to the input image")
-ap.add_argument("-lpr_model", "--lpr_model", type=str, default="vgg16", help="name of pre-trained network to use")
+ap.add_argument("-model", "--model", type=str, default="vgg16", help="name of pre-trained network to use")
 args = vars(ap.parse_args())
 
-# define a dictionary that maps lpr_model names to their classes
+# define a dictionary that maps model names to their classes
 # inside Keras
 MODELS = {
     "vgg16": VGG16,
@@ -26,18 +26,18 @@ MODELS = {
     "resnet": ResNet50  # best
 }
 
-# ensure a valid lpr_model name was supplied via command line argument
-if args["lpr_model"] not in MODELS.keys():
-    raise AssertionError("The --lpr_model command line argument should be a key in the 'MODEL' dictionary")
+# ensure a valid model name was supplied via command line argument
+if args["model"] not in MODELS.keys():
+    raise AssertionError("The --model command line argument should be a key in the 'MODEL' dictionary")
 
 # initialize the input image shape (224x224 pixels) along with
 # the pre-processing function (this might need to be changed
-# based on which lpr_model we use to classify our image)
+# based on which model we use to classify our image)
 
 # if we are using the InceptionV3 or Xception networks, then we
 # need to set the input shape to (299x299) [rather than (224x224)]
 # and use a different image processing function
-if args["lpr_model"] in ("inception", "xception"):
+if args["model"] in ("inception", "xception"):
     inputShape = (299, 299)
     preprocess = inception_v3.preprocess_input
 else:
@@ -50,8 +50,8 @@ else:
 # network you are using, the weights can be 90-575MB, so be
 # patient; the weights will be cached and subsequent runs of this
 # script will be *much* faster)
-print("[INFO] loading {}...".format(args["lpr_model"]))
-Network = MODELS[args["lpr_model"]]
+print("[INFO] loading {}...".format(args["model"]))
+Network = MODELS[args["model"]]
 model = Network(weights="imagenet")
 
 # load the input image using the Keras helper utility while ensuring
@@ -68,11 +68,11 @@ image = img_to_array(image)
 image = np.expand_dims(image, axis=0)
 
 # pre-process the image using the appropriate function based on the
-# lpr_model that has been loaded (i.e., mean subtraction, scaling, etc.)
+# model that has been loaded (i.e., mean subtraction, scaling, etc.)
 image = preprocess(image)
 
 # classify the image
-print("[INFO] classifying image with '{}'...".format(args["lpr_model"]))
+print("[INFO] classifying image with '{}'...".format(args["model"]))
 preds = model.predict(image)
 P = imagenet_utils.decode_predictions(preds, top=5)
 

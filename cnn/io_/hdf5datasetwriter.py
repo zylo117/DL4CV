@@ -28,8 +28,8 @@ class HDF5DatasetWriter:
         # one to store the images/features and another to store the
         # class labels
         self.db = h5py.File(outputPath, "w")
-        self.data = self.db.create_dataset(dataKey, dims, dtype=np.float)
-        self.labels = self.db.create_dataset("labels", (dims[0],), dtype=np.int)
+        self.data = self.db.create_dataset(dataKey, dims, dtype=np.float, compression=9)
+        self.labels = self.db.create_dataset("labels", (dims[0],), dtype=np.int, compression=9)
 
         # store the buffer size, then initialize the buffer itself
         # along with the index into the datasets

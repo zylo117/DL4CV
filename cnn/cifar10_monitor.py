@@ -48,7 +48,7 @@ testY = lb.fit_transform(testY)
 labelNames = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 
 # initialize the SGD optimizer, but without any learning rate decay
-print("[INFO] compiling lpr_model...")
+print("[INFO] compiling model...")
 opt = SGD(lr=0.01, momentum=0.9, nesterov=True)
 # check to see if we are compiling using just a single GPU
 if G <= 1:
@@ -59,11 +59,11 @@ if G <= 1:
 else:
     print("[INFO] training with {} GPUs...".format(G))
 
-    # we'll store a copy of the lpr_model on *every* GPU and then combine
+    # we'll store a copy of the model on *every* GPU and then combine
     # the results from the gradient updates on the CPU
     model = MiniVGGNet.build(width=32, height=32, depth=3, classes=10)
 
-    # make the lpr_model parallel
+    # make the model parallel
     model = multi_gpu_model(model, gpus=G)
 
 model.summary()

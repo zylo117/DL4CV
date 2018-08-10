@@ -35,8 +35,8 @@ if G > 1:
 ap = argparse.ArgumentParser()
 ap.add_argument('-c', '--checkpoints', required=True,
                 help='path to output checkpoint directory')
-ap.add_argument('-m', '--lpr_model', type=str,
-                help='path to *specific* lpr_model checkpoint to load')
+ap.add_argument('-m', '--model', type=str,
+                help='path to *specific* model checkpoint to load')
 ap.add_argument('-s', '--start-epoch', type=int, default=0,
                 help='epoch to restart training at')
 args = vars(ap.parse_args())
@@ -66,10 +66,10 @@ valGen = HDF5DatasetGenerator(config.VAL_HDF5, 64,
 
 opt = Adam(1e-3)
 
-# if there is no specific lpr_model checkpoint supplied, then initialize
-# the network and compile the lpr_model
-if args['lpr_model'] is None:
-    print('[INFO] compiling lpr_model...')
+# if there is no specific model checkpoint supplied, then initialize
+# the network and compile the model
+if args['model'] is None:
+    print('[INFO] compiling model...')
     single_gpu_model = DeeperGoogLeNet.build(64, 64, 3,
                                   classes=config.NUM_CLASSES,
                                   reg=0.0002)
@@ -81,9 +81,9 @@ if args['lpr_model'] is None:
     else:
         print("[INFO] training with {} GPUs...".format(G))
 
-        # we'll store a copy of the lpr_model on *every* GPU and then combine
+        # we'll store a copy of the model on *every* GPU and then combine
         # the results from the gradient updates on the CPU
-        # make the lpr_model parallel
+        # make the model parallel
         model = multi_gpu_model(single_gpu_model, gpus=G)
 
     model.compile(loss='categorical_crossentropy', optimizer=opt,
@@ -91,8 +91,8 @@ if args['lpr_model'] is None:
 
 # otherwise, load the checkpoint from disk
 else:
-    print('[INFO] loading {}...'.format(args['lpr_model']))
-    single_gpu_model = load_model(args['lpr_model'], compile=False)
+    print('[INFO] loading {}...'.format(args['model']))
+    single_gpu_model = load_model(args['model'], compile=False)
 
     if G <= 1:
         print("[INFO] training with 1 GPU...")
@@ -101,9 +101,9 @@ else:
     else:
         print("[INFO] training with {} GPUs...".format(G))
 
-        # we'll store a copy of the lpr_model on *every* GPU and then combine
+        # we'll store a copy of the model on *every* GPU and then combine
         # the results from the gradient updates on the CPU
-        # make the lpr_model parallel
+        # make the model parallel
         model = multi_gpu_model(single_gpu_model, gpus=G)
 
     model.compile(loss='categorical_crossentropy', optimizer=opt,

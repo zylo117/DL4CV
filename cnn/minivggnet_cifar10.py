@@ -32,8 +32,8 @@ testY = lb.fit_transform(testY)
 labelNames = ["airplane", "automobile", "bird", "cat", "deer",
               "dog", "frog", "horse", "ship", "truck"]
 
-# initialize the optimizer and lpr_model
-print("[INFO] compiling lpr_model...")
+# initialize the optimizer and model
+print("[INFO] compiling model...")
 opt = SGD(lr=0.01, decay=0.01 / 40, momentum=0.9, nesterov=True)
 model = MiniVGGNet.build(width=32, height=32, depth=3, classes=10)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])

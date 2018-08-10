@@ -7,6 +7,29 @@ from field_test.smart_test.license_plate_recognition.kmeans import kMeans
 from field_test.smart_test.license_plate_recognition.find_color import car_plate_color
 
 
+def distance(pt1, pt2):
+    return np.sqrt((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2)
+
+
+def four_perspective(img, pt1, pt2, pt3, pt4):
+    w = (distance(pt1, pt2) + distance(pt3, pt4)) / 2
+    h = (distance(pt2, pt3) + distance(pt1, pt4)) / 2
+
+    ori = [[pt1[0], pt1[1]], [pt2[0], pt2[1]],
+           [pt3[0], pt3[1]], [pt4[0], pt4[1]]]
+    ori = np.array(ori).astype(np.float32)
+
+    dst = [[0, 0], [w, 0],
+           [w, h], [0, h]]
+    dst = np.array(dst).astype(np.float32)
+    # compute the perspective transform matrix and then apply it
+    M = cv2.getPerspectiveTransform(ori, dst)
+    img = cv2.warpPerspective(img, M, (int(w), int(h)), flags=cv2.INTER_LANCZOS4,
+                              borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+
+    return img
+
+
 def deskew(ori_img, iteration=36, remove_bg=False):
     # preprocess
     img = cv2.cvtColor(ori_img, cv2.COLOR_BGR2GRAY)
@@ -174,8 +197,8 @@ def detrap(ori_img):
         M = cv2.getPerspectiveTransform(ori, dst)
         old_h, old_w = img.shape[:2]
         img = cv2.copyMakeBorder(img, int(0.2 * old_h), int(0.2 * old_h), int(0.2 * old_w),
-                                       int(0.2 * old_w),
-                                       cv2.BORDER_CONSTANT, value=0)
+                                 int(0.2 * old_w),
+                                 cv2.BORDER_CONSTANT, value=0)
 
         new_h, new_w = img.shape[:2]
         img = cv2.warpPerspective(img, M, (new_w, new_h), borderMode=cv2.BORDER_CONSTANT, borderValue=0)

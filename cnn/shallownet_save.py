@@ -15,7 +15,7 @@ __classes__ = 2
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True, help="path to input dataset")
-ap.add_argument("-m", "--lpr_model", required=True, help="path to output dataset")
+ap.add_argument("-m", "--model", required=True, help="path to output dataset")
 args = vars(ap.parse_args())
 
 # grab the list of images that we’ll be describing
@@ -51,8 +51,8 @@ if __classes__ == 2:
     new_testY[:, 1] = new_testY[:, 0] == False
     testY = new_testY
 
-# initialize the optimizer and lpr_model
-print("[INFO] compiling lpr_model...")
+# initialize the optimizer and model
+print("[INFO] compiling model...")
 opt = SGD(lr=0.005)
 model = ShallowNet.build(width=32, height=32, depth=3, classes=__classes__)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
@@ -63,7 +63,7 @@ H = model.fit(trainX, trainY, validation_data=(testX, testY), batch_size=32, epo
 
 # save the network to disk
 print("[INFO] serializing network...")
-model.save(args["lpr_model"])
+model.save(args["model"])
 
 # evaluate the network
 print("[INFO] evaluating network...")

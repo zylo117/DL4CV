@@ -20,7 +20,7 @@ testGen = HDF5DatasetGenerator(config.TEST_HDF5, 64,
                                preprocessors=[sp, mp, iap], classes=config.NUM_CLASSES)
 
 # load the pre-trained network
-print('[INFO] loading lpr_model...')
+print('[INFO] loading model...')
 model = load_model(config.MODEL_PATH)
 
 # make predictions on the testing data

@@ -17,12 +17,11 @@ import imutils
 import json
 
 # SECRET_KEY = 'FR0M+he5hadow1\'VEc0ME'
-SECRET_KEY = 'sk_DEMODEMODEMODEMODEMODEMO'
+# SECRET_KEY = 'sk_b4cecca0bb92c620ffebd893'
+# SECRET_KEY = 'sk_d8f4510573cb7b2e1144c239'
+SECRET_KEY = 'sk_588d6d08cae2d5568e6a4936'
 
-raw_images_path = '../../../datasets/car_exam/raw_images'
-images_path = '../../../datasets/car_exam/images'
-confirmed_images_path = '../../../datasets/car_exam/confirmed_images'
-unlabeled_images_path = '../../../datasets/car_exam/unlabeled_images'
+raw_images_path = '/home/public/car_exam/raw_images'
 
 KEY = {
     'license_plate': ['0111', '0112', '0164', '0322', '0323', '0348', '0351', '0352']
@@ -49,17 +48,21 @@ for p in pl:
                 '.png'):
                 for K in KEY['license_plate']:
                     if K in img_path:
-                        count += 1
-                        # start processing
-                        with open(img_path, 'rb') as image_file:
-                            img_base64 = base64.b64encode(image_file.read())
+                        if not os.path.exists(img_path.split('.jpg')[0] + '.json'):
+                            count += 1
+                            # start processing
+                            with open(img_path, 'rb') as image_file:
+                                img_base64 = base64.b64encode(image_file.read())
 
-                        url = 'https://api.openalpr.com/v2/recognize_bytes?recognize_vehicle=1&country=cn&secret_key=%s' % (
-                            SECRET_KEY)
-                        r = requests.post(url, data=img_base64)
-                        r = r.json()
-                        js = json.dumps(r, indent=2)
-                        info_file = open(img_path.split('.jpg')[0] + '.json', 'w')
-                        info_file.write(js)
-                        info_file.close()
-                        print(count)
+                            url = 'https://api.openalpr.com/v2/recognize_bytes?recognize_vehicle=1&country=cn&secret_key=%s' % (
+                                SECRET_KEY)
+                            r = requests.post(url, data=img_base64)
+                            r = r.json()
+                            js = json.dumps(r, indent=2)
+                            info_file = open(img_path.split('.jpg')[0] + '.json', 'w')
+                            info_file.write(js)
+                            info_file.close()
+                            print('NO.{}, path: {}'.format(count, img_path))
+
+                            if count >= 960:
+                                raise Exception
